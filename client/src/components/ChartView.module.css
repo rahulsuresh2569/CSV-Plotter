@@ -1,0 +1,12 @@
+.wrapper {
+  width: 100%;
+}
+
+.chartContainer {
+  position: relative;
+  height: 420px;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
