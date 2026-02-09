@@ -89,6 +89,7 @@ function App() {
     <div className="app">
       <header className="app-header">
         <h1>CSV Plotter</h1>
+        <p className="app-subtitle">Upload a CSV file, select columns, and visualize your data</p>
       </header>
 
       <main className="app-main">

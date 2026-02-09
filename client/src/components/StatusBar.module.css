@@ -10,10 +10,10 @@
   align-items: flex-start;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  color: #991b1b;
+  background: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: var(--radius-md);
+  color: var(--color-error-text);
   font-size: 0.9rem;
   line-height: 1.4;
 }
@@ -25,7 +25,7 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #dc2626;
+  background: var(--color-error);
   color: #fff;
   font-size: 0.7rem;
   font-weight: 700;
@@ -36,9 +36,9 @@
 /* Info box */
 .infoBox {
   padding: 0.75rem 1rem;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  border-radius: 8px;
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-md);
 }
 
 .infoGrid {
@@ -49,20 +49,20 @@
 }
 
 .infoLabel {
-  color: #64748b;
+  color: var(--color-text-tertiary);
   font-weight: 500;
 }
 
 .infoValue {
-  color: #1e293b;
+  color: var(--color-text-primary);
 }
 
 /* Warning box */
 .warningBox {
   padding: 0.75rem 1rem;
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: 8px;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning-border);
+  border-radius: var(--radius-md);
 }
 
 .warningLine {
@@ -71,7 +71,7 @@
   gap: 0.5rem;
   margin: 0;
   font-size: 0.85rem;
-  color: #92400e;
+  color: var(--color-warning-text);
   line-height: 1.4;
 }
 
@@ -86,7 +86,7 @@
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #f59e0b;
+  background: var(--color-warning-icon);
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
