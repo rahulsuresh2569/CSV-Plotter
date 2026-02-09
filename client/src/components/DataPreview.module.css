@@ -21,6 +21,17 @@
   text-transform: none;
 }
 
+.infoBanner {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  color: var(--color-info-text);
+  background: var(--color-info-bg);
+  border: 1px solid var(--color-info-border);
+  border-radius: var(--radius-sm);
+  line-height: 1.4;
+}
+
 .tableContainer {
   overflow-x: auto;
   max-height: 420px;
@@ -49,9 +60,46 @@
   color: var(--color-text-primary);
 }
 
+.headerWrap {
+  position: relative;
+  display: inline-block;
+}
+
 .colName {
-  display: block;
+  display: inline;
   line-height: 1.3;
+  cursor: pointer;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.15s;
+}
+
+.colName:hover {
+  border-bottom-color: var(--color-text-tertiary);
+}
+
+.editIcon {
+  margin-left: 0.3rem;
+  font-size: 0.75em;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.headerInput {
+  position: absolute;
+  left: -0.25rem;
+  top: -0.1rem;
+  width: 10ch;
+  padding: 0.1rem 0.25rem;
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-input);
+  font-size: inherit;
+  font-weight: inherit;
+  font-family: inherit;
+  color: var(--color-text-primary);
+  line-height: 1.3;
+  outline: none;
+  box-sizing: border-box;
 }
 
 .colType {
