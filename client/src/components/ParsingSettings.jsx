@@ -1,22 +1,44 @@
+import { useState, useEffect } from 'react'
 import styles from './ParsingSettings.module.css'
 
 /**
- * Parsing settings panel with three dropdowns.
- * Each defaults to "Auto (detected: X)" and allows manual override.
- * Changing a setting triggers onSettingsChange, which re-uploads the file
- * with the new overrides.
+ * Parsing settings panel with three dropdowns and Apply/Reset buttons.
+ * Dropdowns update local pending state; changes are only sent to the parent
+ * when the user clicks Apply.
  *
  * Props:
- *   settings: { delimiter, decimal, hasHeader }  — current override values ('auto' or explicit)
+ *   settings: { delimiter, decimal, hasHeader }  — current committed values
  *   metadata: { delimiter, decimalSeparator, hasHeader } — what the backend detected
- *   onSettingsChange(newSettings) — callback when a dropdown changes
+ *   onApply(newSettings) — callback when Apply is clicked
  *   disabled: boolean — true while re-parsing
  */
-export default function ParsingSettings({ settings, metadata, onSettingsChange, disabled }) {
+export default function ParsingSettings({ settings, metadata, onApply, disabled }) {
   if (!metadata) return null
 
+  const [pending, setPending] = useState(settings)
+
+  // Sync pending state when parent settings change (e.g. after a new file upload resets to auto)
+  useEffect(() => {
+    setPending(settings)
+  }, [settings])
+
+  const hasChanges =
+    pending.delimiter !== settings.delimiter ||
+    pending.decimal !== settings.decimal ||
+    pending.hasHeader !== settings.hasHeader
+
   function handleChange(field, value) {
-    onSettingsChange({ ...settings, [field]: value })
+    setPending((prev) => ({ ...prev, [field]: value }))
+  }
+
+  function handleApply() {
+    onApply(pending)
+  }
+
+  function handleReset() {
+    const autoSettings = { delimiter: 'auto', decimal: 'auto', hasHeader: 'auto' }
+    setPending(autoSettings)
+    onApply(autoSettings)
   }
 
   return (
@@ -27,7 +49,7 @@ export default function ParsingSettings({ settings, metadata, onSettingsChange, 
           <span className={styles.label}>Delimiter</span>
           <select
             className={styles.select}
-            value={settings.delimiter}
+            value={pending.delimiter}
             onChange={(e) => handleChange('delimiter', e.target.value)}
             disabled={disabled}
           >
@@ -44,7 +66,7 @@ export default function ParsingSettings({ settings, metadata, onSettingsChange, 
           <span className={styles.label}>Decimal separator</span>
           <select
             className={styles.select}
-            value={settings.decimal}
+            value={pending.decimal}
             onChange={(e) => handleChange('decimal', e.target.value)}
             disabled={disabled}
           >
@@ -60,7 +82,7 @@ export default function ParsingSettings({ settings, metadata, onSettingsChange, 
           <span className={styles.label}>First row is header</span>
           <select
             className={styles.select}
-            value={settings.hasHeader}
+            value={pending.hasHeader}
             onChange={(e) => handleChange('hasHeader', e.target.value)}
             disabled={disabled}
           >
@@ -71,6 +93,23 @@ export default function ParsingSettings({ settings, metadata, onSettingsChange, 
             <option value="false">No</option>
           </select>
         </label>
+      </div>
+
+      <div className={styles.actions}>
+        <button
+          className={styles.applyButton}
+          onClick={handleApply}
+          disabled={disabled || !hasChanges}
+        >
+          Apply
+        </button>
+        <button
+          className={styles.resetButton}
+          onClick={handleReset}
+          disabled={disabled}
+        >
+          Reset to Auto
+        </button>
       </div>
     </div>
   )

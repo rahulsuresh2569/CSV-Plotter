@@ -55,7 +55,14 @@ router.post('/upload', (req, res) => {
     } catch (err) {
       // ParseError = known, user-facing error
       if (err instanceof ParseError) {
-        return res.status(400).json({ error: err.message, code: err.code });
+        const response = { error: err.message, code: err.code };
+        if (err.metadata) {
+          response.metadata = {
+            ...err.metadata,
+            originalFileName: req.file?.originalname || null,
+          };
+        }
+        return res.status(400).json(response);
       }
 
       // Unexpected error

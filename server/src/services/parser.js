@@ -21,10 +21,11 @@ import { inferColumnTypes } from './inferTypes.js';
 // Custom error class so the route handler can distinguish parse errors
 // ---------------------------------------------------------------------------
 export class ParseError extends Error {
-  constructor(message, code) {
+  constructor(message, code, metadata = null) {
     super(message);
     this.name = 'ParseError';
     this.code = code;
+    this.metadata = metadata;
   }
 }
 
@@ -261,6 +262,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
     throw new ParseError(
       'The file contains headers but no data rows.',
       'NO_DATA_ROWS',
+      { delimiter, decimalSeparator, hasHeader: hasHeaderDetected, commentLinesSkipped },
     );
   }
 
@@ -316,6 +318,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
     throw new ParseError(
       'Only one column was detected. A chart needs at least two columns (one for X and one for Y).',
       'TOO_FEW_COLUMNS',
+      { delimiter, decimalSeparator, hasHeader: hasHeaderDetected, commentLinesSkipped },
     );
   }
 

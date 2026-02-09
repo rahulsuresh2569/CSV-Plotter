@@ -9,8 +9,9 @@ import styles from './StatusBar.module.css'
  *   metadata: object|null       — { delimiter, decimalSeparator, hasHeader, commentLinesSkipped, originalFileName }
  *   rowCount: number|null       — total data rows
  *   columnCount: number|null    — total columns
+ *   showSettingsHint: boolean   — when true, error hint suggests adjusting settings
  */
-export default function StatusBar({ error, warnings, metadata, rowCount, columnCount }) {
+export default function StatusBar({ error, warnings, metadata, rowCount, columnCount, showSettingsHint }) {
   if (!error && !metadata) return null
 
   return (
@@ -18,7 +19,18 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
       {error && (
         <div className={styles.errorBox}>
           <span className={styles.errorIcon}>!</span>
-          <span>{error}</span>
+          <div>
+            <span>{error}</span>
+            {showSettingsHint ? (
+              <p className={styles.errorHint}>
+                Try adjusting the parsing settings below, or upload a different file.
+              </p>
+            ) : (
+              <p className={styles.errorHint}>
+                Please check the file format and try uploading again.
+              </p>
+            )}
+          </div>
         </div>
       )}
 
