@@ -215,13 +215,25 @@ export function parseCSV(fileBuffer, overrides = {}) {
   let rowLines; // the lines that contain actual data (header excluded)
   let hasHeaderDetected;
 
+  // Check if the last comment line is actually a header for the data.
+  // It qualifies only if its field count matches the data's column count
+  // (e.g. TestData2: "#Point Nr.; Freq.;FRFMag;FRFPhase" → 4 fields, data has 4 cols).
+  // If it doesn't match, it's just metadata — fall through to normal detection.
+  let commentIsHeader = false;
   if (commentHeaderLine) {
-    // Header came from a #-prefixed comment line (TestData2 pattern)
-    hasHeaderDetected = true;
     const stripped = commentHeaderLine.replace(/^#\s*/, '');
-    headerNames = stripped.split(delimiter).map((h) => h.trim());
-    rowLines = dataLines; // all non-comment lines are data
-  } else {
+    const commentFields = stripped.split(delimiter).map((h) => h.trim());
+    const dataColCount = dataLines[0].split(delimiter).length;
+
+    if (commentFields.length === dataColCount) {
+      commentIsHeader = true;
+      hasHeaderDetected = true;
+      headerNames = commentFields;
+      rowLines = dataLines; // all non-comment lines are data
+    }
+  }
+
+  if (!commentIsHeader) {
     // Decide whether the first data line is a header or not
     if (overrides.hasHeader && overrides.hasHeader !== 'auto') {
       hasHeaderDetected = overrides.hasHeader === 'true';
