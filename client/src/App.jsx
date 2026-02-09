@@ -115,7 +115,6 @@ function App() {
           />
         )}
 
-        {/* Steps 4 & 5: DataPreview, ColumnSelector, ChartView — implemented next */}
         {parseResult && (
           <>
             <DataPreview
