@@ -1,0 +1,5 @@
+id,comment,value
+1,"normal note",10.5
+2,"contains,comma,inside",12.0
+3,"quoted ""double quotes"" example",13.2
+4,"trailing comma inside, ",9.8
