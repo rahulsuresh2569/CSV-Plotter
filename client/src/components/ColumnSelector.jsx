@@ -84,7 +84,7 @@ export default function ColumnSelector({
                 />
                 <span className={styles.labelText}>{col.name}</span>
                 {!isNumeric && (
-                  <span className={styles.typeHint}>string</span>
+                  <span className={styles.typeHint}>{col.type}</span>
                 )}
               </label>
             )

@@ -3,12 +3,14 @@ import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
+  TimeScale,
   PointElement,
   LineElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js'
+import 'chartjs-adapter-date-fns'
 import { Line } from 'react-chartjs-2'
 import styles from './ChartView.module.css'
 
@@ -16,6 +18,7 @@ import styles from './ChartView.module.css'
 ChartJS.register(
   CategoryScale,
   LinearScale,
+  TimeScale,
   PointElement,
   LineElement,
   Title,
@@ -54,10 +57,11 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
 
   // Determine if X is numeric — use linear scale; otherwise category
   const xIsNumeric = xColumn?.type === 'numeric'
+  const xIsDate = xColumn?.type === 'date'
 
   // Build Chart.js data structure — memoized to avoid rebuilding on every render
   const chartData = useMemo(() => {
-    const labels = xIsNumeric ? undefined : data.map((row) => row[selectedXColumn])
+    const labels = (xIsNumeric || xIsDate) ? undefined : data.map((row) => row[selectedXColumn])
 
     const datasets = yColumnsList.map((yCol, i) => {
       const color = SERIES_COLORS[i % SERIES_COLORS.length]
@@ -66,7 +70,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
       return {
         label: yCol.name,
         data: data.map((row) => ({
-          x: row[selectedXColumn],
+          x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
           y: row[yCol.index],
         })),
         borderColor: color.border,
@@ -80,7 +84,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     })
 
     return { labels, datasets }
-  }, [data, selectedXColumn, yColumnsList, xIsNumeric])
+  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate])
 
   const options = useMemo(() => ({
     responsive: true,
@@ -106,7 +110,12 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     },
     scales: {
       x: {
-        type: xIsNumeric ? 'linear' : 'category',
+        type: xIsDate ? 'time' : xIsNumeric ? 'linear' : 'category',
+        ...(xIsDate && {
+          time: {
+            tooltipFormat: 'yyyy-MM-dd HH:mm',
+          },
+        }),
         title: {
           display: true,
           text: xColumn?.name || '',
@@ -138,7 +147,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
         },
       },
     },
-  }), [xColumn, yColumnsList, xIsNumeric, data.length])
+  }), [xColumn, yColumnsList, xIsNumeric, xIsDate, data.length])
 
   return (
     <div className={styles.wrapper}>
