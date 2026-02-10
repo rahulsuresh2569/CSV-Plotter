@@ -124,3 +124,30 @@
   flex-shrink: 0;
   margin-top: 1px;
 }
+
+@media (max-width: 640px) {
+  .infoBox {
+    padding: 0.6rem 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .fileName {
+    font-size: 0.8rem;
+  }
+
+  .statsRow {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .stat {
+    padding: 0;
+    border-left: none;
+    font-size: 0.75rem;
+  }
+
+  .stat:first-child {
+    padding-left: 0;
+  }
+}
