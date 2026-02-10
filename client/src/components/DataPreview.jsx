@@ -126,9 +126,20 @@ function EditableHeader({ column, onRename }) {
           />
         )}
       </span>
-      <span className={styles.colType}>{column.type}</span>
+      <span className={styles.colType}>{typeIcon(column.type)} {column.type}</span>
     </th>
   )
+}
+
+function typeIcon(type) {
+  const size = 11
+  if (type === 'numeric') return <span className={styles.typeIcon}>#</span>
+  if (type === 'date') return (
+    <svg className={styles.typeIcon} width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
+      <path d="M4 0v1H2a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2h-2V0h-1v1H5V0H4zm-2 5h12v9H2V5zm2 2v2h2V7H4zm4 0v2h2V7H8zm4 0v2h2V7h-2z"/>
+    </svg>
+  )
+  return <span className={styles.typeIcon}>Aa</span>
 }
 
 function formatCell(value, type) {

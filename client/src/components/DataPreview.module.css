@@ -104,11 +104,19 @@
 }
 
 .colType {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
   font-size: 0.7rem;
   font-weight: 400;
   color: var(--color-text-muted);
   text-transform: lowercase;
+}
+
+.typeIcon {
+  font-size: 0.65rem;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
 .td {
