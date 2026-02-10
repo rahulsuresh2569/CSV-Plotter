@@ -46,6 +46,7 @@
   border-collapse: collapse;
   font-size: 0.82rem;
   white-space: nowrap;
+  background: var(--color-bg-surface);
 }
 
 .th {
@@ -118,6 +119,10 @@
 
 .rowEven {
   background: var(--color-bg-page);
+}
+
+.table tbody tr:hover {
+  background: var(--color-accent-light);
 }
 
 .nullValue {

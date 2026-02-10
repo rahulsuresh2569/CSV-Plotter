@@ -69,3 +69,43 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* Dark mode overrides */
+[data-theme='dark'] {
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #94a3b8;
+  --color-text-tertiary: #7d8da1;
+  --color-text-muted: #6b7a8d;
+
+  --color-bg-page: #0f172a;
+  --color-bg-surface: #1e293b;
+  --color-bg-subtle: #334155;
+  --color-bg-input: #1e293b;
+
+  --color-border: #334155;
+  --color-border-hover: #64748b;
+  --color-border-strong: #475569;
+
+  --color-accent: #60a5fa;
+  --color-accent-hover: #3b82f6;
+  --color-accent-light: #1e3a5f;
+
+  --color-error: #f87171;
+  --color-error-bg: #2d1215;
+  --color-error-border: #5c1d1d;
+  --color-error-text: #fca5a5;
+
+  --color-warning-bg: #2d2305;
+  --color-warning-border: #5c4813;
+  --color-warning-text: #fcd34d;
+  --color-warning-icon: #f59e0b;
+
+  --color-info-bg: #0c2d48;
+  --color-info-border: #1e4d6e;
+  --color-info-text: #7dd3fc;
+
+  --color-grid: #2d3a4d;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.2);
+}

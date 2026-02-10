@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -6,12 +6,13 @@ import {
   TimeScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
-import { Line } from 'react-chartjs-2'
+import { Line, Scatter, Bar } from 'react-chartjs-2'
 import styles from './ChartView.module.css'
 
 // Register Chart.js components once
@@ -21,6 +22,7 @@ ChartJS.register(
   TimeScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
@@ -28,40 +30,66 @@ ChartJS.register(
 
 // Distinct colors for multi-series lines
 const SERIES_COLORS = [
-  { border: '#3b82f6', background: 'rgba(59, 130, 246, 0.1)' },
-  { border: '#ef4444', background: 'rgba(239, 68, 68, 0.1)' },
-  { border: '#10b981', background: 'rgba(16, 185, 129, 0.1)' },
-  { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)' },
-  { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.1)' },
-  { border: '#ec4899', background: 'rgba(236, 72, 153, 0.1)' },
-  { border: '#06b6d4', background: 'rgba(6, 182, 212, 0.1)' },
-  { border: '#84cc16', background: 'rgba(132, 204, 22, 0.1)' },
+  { border: '#3b82f6', background: 'rgba(59, 130, 246, 0.5)' },
+  { border: '#ef4444', background: 'rgba(239, 68, 68, 0.5)' },
+  { border: '#10b981', background: 'rgba(16, 185, 129, 0.5)' },
+  { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.5)' },
+  { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.5)' },
+  { border: '#ec4899', background: 'rgba(236, 72, 153, 0.5)' },
+  { border: '#06b6d4', background: 'rgba(6, 182, 212, 0.5)' },
+  { border: '#84cc16', background: 'rgba(132, 204, 22, 0.5)' },
+]
+
+const CHART_TYPES = [
+  { value: 'line', label: 'Line' },
+  { value: 'scatter', label: 'Scatter' },
+  { value: 'bar', label: 'Bar' },
 ]
 
 /**
- * Chart.js line chart that plots selected X vs Y columns.
+ * Chart.js chart that plots selected X vs Y columns.
+ * Supports line, scatter, and bar chart types.
  *
  * Props:
  *   columns: [{ name, type, index }]
  *   data: [[value, ...], ...]  — all rows (full dataset)
  *   selectedXColumn: number (column index)
  *   selectedYColumns: number[] (column indices)
+ *   chartType: 'line' | 'scatter' | 'bar'
+ *   onChartTypeChange(type) — callback to switch chart type
  */
-export default function ChartView({ columns, data, selectedXColumn, selectedYColumns }) {
-  if (!data || selectedYColumns.length === 0 || selectedXColumn === null) return null
+export default function ChartView({ columns, data, selectedXColumn, selectedYColumns, chartType, onChartTypeChange, darkMode }) {
+  const chartRef = useRef(null)
 
-  const xColumn = columns.find((c) => c.index === selectedXColumn)
-  const yColumnsList = selectedYColumns
-    .map((idx) => columns.find((c) => c.index === idx))
+  const xColumn = columns?.find((c) => c.index === selectedXColumn) ?? null
+  const yColumnsList = (selectedYColumns || [])
+    .map((idx) => columns?.find((c) => c.index === idx))
     .filter(Boolean)
 
   // Determine if X is numeric — use linear scale; otherwise category
   const xIsNumeric = xColumn?.type === 'numeric'
   const xIsDate = xColumn?.type === 'date'
+  const isBar = chartType === 'bar'
+
+  // Theme-aware colors for chart axes and grid
+  const themeColors = useMemo(() => {
+    const s = getComputedStyle(document.documentElement)
+    return {
+      title: s.getPropertyValue('--color-text-secondary').trim(),
+      tick: s.getPropertyValue('--color-text-tertiary').trim(),
+      grid: s.getPropertyValue('--color-grid').trim(),
+      legend: s.getPropertyValue('--color-text-secondary').trim(),
+    }
+  }, [darkMode])
 
   // Build Chart.js data structure — memoized to avoid rebuilding on every render
   const chartData = useMemo(() => {
-    const labels = (xIsNumeric || xIsDate) ? undefined : data.map((row) => row[selectedXColumn])
+    if (!data || yColumnsList.length === 0) return { datasets: [] }
+
+    // Bar charts always use category scale for X-axis labels
+    const labels = (isBar || (!xIsNumeric && !xIsDate))
+      ? data.map((row) => row[selectedXColumn])
+      : undefined
 
     const datasets = yColumnsList.map((yCol, i) => {
       const color = SERIES_COLORS[i % SERIES_COLORS.length]
@@ -69,14 +97,16 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
 
       return {
         label: yCol.name,
-        data: data.map((row) => ({
-          x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
-          y: row[yCol.index],
-        })),
+        data: isBar
+          ? data.map((row) => row[yCol.index])
+          : data.map((row) => ({
+              x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
+              y: row[yCol.index],
+            })),
         borderColor: color.border,
-        backgroundColor: color.background,
-        borderWidth: isLargeDataset ? 1.5 : 2,
-        pointRadius: isLargeDataset ? 0 : 2,
+        backgroundColor: isBar ? color.background : color.background.replace('0.5', '0.1'),
+        borderWidth: isBar ? 1 : isLargeDataset ? 1.5 : 2,
+        pointRadius: chartType === 'scatter' ? (isLargeDataset ? 1.5 : 3) : isLargeDataset ? 0 : 2,
         pointHoverRadius: 4,
         tension: 0,
         spanGaps: false,
@@ -84,14 +114,14 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     })
 
     return { labels, datasets }
-  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate])
+  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate, chartType, isBar])
 
   const options = useMemo(() => ({
     responsive: true,
     maintainAspectRatio: false,
-    animation: data.length > 2000 ? false : { duration: 300 },
+    animation: (data?.length || 0) > 2000 ? false : { duration: 300 },
     interaction: {
-      mode: 'index',
+      mode: isBar ? 'index' : 'nearest',
       intersect: false,
     },
     plugins: {
@@ -102,6 +132,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
           usePointStyle: true,
           padding: 16,
           font: { size: 12 },
+          color: themeColors.legend,
         },
       },
       tooltip: {
@@ -110,8 +141,8 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     },
     scales: {
       x: {
-        type: xIsDate ? 'time' : xIsNumeric ? 'linear' : 'category',
-        ...(xIsDate && {
+        type: isBar ? 'category' : xIsDate ? 'time' : xIsNumeric ? 'linear' : 'category',
+        ...(xIsDate && !isBar && {
           time: {
             tooltipFormat: 'yyyy-MM-dd HH:mm',
           },
@@ -120,15 +151,15 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
           display: true,
           text: xColumn?.name || '',
           font: { size: 13, weight: '600' },
-          color: '#475569',
+          color: themeColors.title,
         },
         ticks: {
-          color: '#64748b',
+          color: themeColors.tick,
           font: { size: 11 },
           maxTicksLimit: 15,
         },
         grid: {
-          color: '#f1f5f9',
+          color: themeColors.grid,
         },
       },
       y: {
@@ -136,23 +167,53 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
           display: yColumnsList.length === 1,
           text: yColumnsList.length === 1 ? yColumnsList[0].name : '',
           font: { size: 13, weight: '600' },
-          color: '#475569',
+          color: themeColors.title,
         },
         ticks: {
-          color: '#64748b',
+          color: themeColors.tick,
           font: { size: 11 },
         },
         grid: {
-          color: '#f1f5f9',
+          color: themeColors.grid,
         },
       },
     },
-  }), [xColumn, yColumnsList, xIsNumeric, xIsDate, data.length])
+  }), [xColumn, yColumnsList, xIsNumeric, xIsDate, isBar, data?.length, themeColors])
+
+  if (!data || yColumnsList.length === 0 || selectedXColumn === null) return null
+
+  function handleExportPNG() {
+    const chart = chartRef.current
+    if (!chart) return
+    const url = chart.toBase64Image()
+    const link = document.createElement('a')
+    link.download = 'chart.png'
+    link.href = url
+    link.click()
+  }
+
+  const ChartComponent = chartType === 'bar' ? Bar : chartType === 'scatter' ? Scatter : Line
 
   return (
     <div className={styles.wrapper}>
+      <div className={styles.toolbar}>
+        <div className={styles.chartTypeGroup}>
+          {CHART_TYPES.map((ct) => (
+            <button
+              key={ct.value}
+              className={`${styles.chartTypeBtn} ${chartType === ct.value ? styles.chartTypeBtnActive : ''}`}
+              onClick={() => onChartTypeChange(ct.value)}
+            >
+              {ct.label}
+            </button>
+          ))}
+        </div>
+        <button className={styles.exportBtn} onClick={handleExportPNG}>
+          Export PNG
+        </button>
+      </div>
       <div className={styles.chartContainer}>
-        <Line data={chartData} options={options} />
+        <ChartComponent ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
   )

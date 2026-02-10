@@ -38,6 +38,26 @@ function App() {
   // Custom column name overrides: { [columnIndex]: "custom name" }
   const [columnNames, setColumnNames] = useState({})
 
+  // Chart type: 'line' | 'scatter' | 'bar'
+  const [chartType, setChartType] = useState('line')
+
+  // Dark mode — set data-theme synchronously so CSS variables are available
+  // during the same render cycle (before child useMemo hooks read them)
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem('csv-plotter-theme') === 'dark'
+    document.documentElement.setAttribute('data-theme', saved ? 'dark' : 'light')
+    return saved
+  })
+
+  function toggleDarkMode() {
+    setDarkMode((prev) => {
+      const next = !prev
+      document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light')
+      localStorage.setItem('csv-plotter-theme', next ? 'dark' : 'light')
+      return next
+    })
+  }
+
   /**
    * Merge custom column names into the parsed columns array.
    * Children receive this merged array and always read col.name.
@@ -126,8 +146,19 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>CSV Plotter</h1>
-        <p className="app-subtitle">Upload a CSV file, select columns, and visualize your data</p>
+        <div className="app-header-row">
+          <div>
+            <h1>CSV Plotter</h1>
+            <p className="app-subtitle">Upload a CSV file, select columns, and visualize your data</p>
+          </div>
+          <button
+            className="theme-toggle"
+            onClick={toggleDarkMode}
+            title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {darkMode ? '\u2600' : '\u263E'}
+          </button>
+        </div>
       </header>
 
       <main className="app-main">
@@ -175,6 +206,9 @@ function App() {
               data={parseResult.data}
               selectedXColumn={selectedXColumn}
               selectedYColumns={selectedYColumns}
+              chartType={chartType}
+              onChartTypeChange={setChartType}
+              darkMode={darkMode}
             />
           </>
         )}
