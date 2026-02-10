@@ -16,6 +16,12 @@ const DEFAULT_SETTINGS = {
   hasHeader: 'auto',
 }
 
+const SAMPLE_FILES = [
+  { name: 'TestData1.csv', path: '/sample-data/TestData1.csv' },
+  { name: 'TestData2.csv', path: '/sample-data/TestData2.csv' },
+  { name: 'TestData3.csv', path: '/sample-data/TestData3.csv' },
+]
+
 function App() {
   // The File object — kept in state so we can re-send it when settings change
   const [file, setFile] = useState(null)
@@ -140,6 +146,19 @@ function App() {
   }
 
   /**
+   * Called when the user clicks a sample file button.
+   * Fetches the CSV from public/, wraps it in a File object,
+   * and feeds it through the normal upload flow.
+   */
+  async function handleSampleSelect(sample) {
+    const res = await fetch(sample.path)
+    const text = await res.text()
+    const blob = new Blob([text], { type: 'text/csv' })
+    const sampleFile = new File([blob], sample.name, { type: 'text/csv' })
+    handleFileSelect(sampleFile)
+  }
+
+  /**
    * Called when Apply is clicked in ParsingSettings.
    * Commits the new settings and re-uploads the same file.
    */
@@ -194,6 +213,20 @@ function App() {
             isUploading={isUploading}
             currentFileName={file?.name || null}
           />
+
+          <div className="sample-row">
+            <span className="sample-label">{t.trySample}</span>
+            {SAMPLE_FILES.map((sample) => (
+              <button
+                key={sample.name}
+                className="sample-btn"
+                onClick={() => handleSampleSelect(sample)}
+                disabled={isUploading}
+              >
+                {sample.name}
+              </button>
+            ))}
+          </div>
 
           <StatusBar
             error={error}

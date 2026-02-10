@@ -39,32 +39,35 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
 
       {metadata && (
         <div className={styles.infoBox}>
-          <div className={styles.infoGrid}>
-            <span className={styles.infoLabel}>{t.infoFile}</span>
-            <span className={styles.infoValue}>{metadata.originalFileName}</span>
-
-            <span className={styles.infoLabel}>{t.infoRows}</span>
-            <span className={styles.infoValue}>{rowCount?.toLocaleString()}</span>
-
-            <span className={styles.infoLabel}>{t.infoColumns}</span>
-            <span className={styles.infoValue}>{columnCount}</span>
-
-            <span className={styles.infoLabel}>{t.infoDelimiter}</span>
-            <span className={styles.infoValue}>{formatDelimiter(metadata.delimiter, t)}</span>
-
-            <span className={styles.infoLabel}>{t.infoDecimal}</span>
-            <span className={styles.infoValue}>
-              {metadata.decimalSeparator === ',' ? t.decimalComma : t.decimalDot}
+          <span className={styles.fileName}>{metadata.originalFileName}</span>
+          <div className={styles.statsRow}>
+            <span className={styles.stat}>
+              <span className={styles.statLabel}>{t.infoRows}</span>
+              <span className={styles.statValue}>{rowCount?.toLocaleString()}</span>
             </span>
-
-            <span className={styles.infoLabel}>{t.infoHeaderRow}</span>
-            <span className={styles.infoValue}>{metadata.hasHeader ? t.yes : t.no}</span>
-
+            <span className={styles.stat}>
+              <span className={styles.statLabel}>{t.infoColumns}</span>
+              <span className={styles.statValue}>{columnCount}</span>
+            </span>
+            <span className={styles.stat}>
+              <span className={styles.statLabel}>{t.infoDelimiter}</span>
+              <span className={styles.statValue}>{formatDelimiter(metadata.delimiter, t)}</span>
+            </span>
+            <span className={styles.stat}>
+              <span className={styles.statLabel}>{t.infoDecimal}</span>
+              <span className={styles.statValue}>
+                {metadata.decimalSeparator === ',' ? t.decimalComma : t.decimalDot}
+              </span>
+            </span>
+            <span className={styles.stat}>
+              <span className={styles.statLabel}>{t.infoHeaderRow}</span>
+              <span className={styles.statValue}>{metadata.hasHeader ? t.yes : t.no}</span>
+            </span>
             {metadata.commentLinesSkipped > 0 && (
-              <>
-                <span className={styles.infoLabel}>{t.infoCommentLines}</span>
-                <span className={styles.infoValue}>{metadata.commentLinesSkipped} {t.skipped}</span>
-              </>
+              <span className={styles.stat}>
+                <span className={styles.statLabel}>{t.infoCommentLines}</span>
+                <span className={styles.statValue}>{metadata.commentLinesSkipped} {t.skipped}</span>
+              </span>
             )}
           </div>
         </div>

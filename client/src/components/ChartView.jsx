@@ -44,6 +44,21 @@ const SERIES_COLORS = [
 const CHART_TYPES = ['line', 'scatter', 'bar']
 
 /**
+ * Uniformly sample `target` rows from `rows`, always including the
+ * first and last row so the full X-axis range is preserved.
+ */
+function decimateUniform(rows, target) {
+  const n = rows.length
+  if (n <= target) return rows
+  const step = (n - 1) / (target - 1)
+  const result = []
+  for (let i = 0; i < target; i++) {
+    result.push(rows[Math.round(i * step)])
+  }
+  return result
+}
+
+/**
  * Chart.js chart that plots selected X vs Y columns.
  * Supports line, scatter, and bar chart types.
  *
@@ -86,20 +101,27 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   const chartData = useMemo(() => {
     if (!data || yColumnsList.length === 0) return { datasets: [] }
 
+    // Decimate bar and scatter charts: rendering thousands of individual
+    // bars or points is very slow, so uniformly sample for performance.
+    const MAX_POINTS = 500
+    const isScatter = chartType === 'scatter'
+    const needsDecimation = (isBar || isScatter) && data.length > MAX_POINTS
+    const rows = needsDecimation ? decimateUniform(data, MAX_POINTS) : data
+
     // Bar charts always use category scale for X-axis labels
     const labels = (isBar || (!xIsNumeric && !xIsDate))
-      ? data.map((row) => row[selectedXColumn])
+      ? rows.map((row) => row[selectedXColumn])
       : undefined
 
     const datasets = yColumnsList.map((yCol, i) => {
       const color = SERIES_COLORS[i % SERIES_COLORS.length]
-      const isLargeDataset = data.length > 1000
+      const isLargeDataset = rows.length > 1000
 
       return {
         label: yCol.name,
         data: isBar
-          ? data.map((row) => row[yCol.index])
-          : data.map((row) => ({
+          ? rows.map((row) => row[yCol.index])
+          : rows.map((row) => ({
               x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
               y: row[yCol.index],
             })),

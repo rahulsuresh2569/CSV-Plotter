@@ -67,6 +67,9 @@ const translations = {
     chartScatter: 'Scatter',
     chartBar: 'Bar',
     exportPng: 'Export PNG',
+
+    // Sample data
+    trySample: 'Or try a sample file:',
   },
 
   de: {
@@ -137,6 +140,9 @@ const translations = {
     chartScatter: 'Punkte',
     chartBar: 'Balken',
     exportPng: 'PNG exportieren',
+
+    // Sample data
+    trySample: 'Oder eine Beispieldatei testen:',
   },
 }
 
