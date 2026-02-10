@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from '../LanguageContext'
 import styles from './ParsingSettings.module.css'
 
 /**
@@ -13,14 +14,15 @@ import styles from './ParsingSettings.module.css'
  *   disabled: boolean — true while re-parsing
  */
 export default function ParsingSettings({ settings, metadata, onApply, disabled }) {
-  if (!metadata) return null
-
+  const t = useTranslation()
   const [pending, setPending] = useState(settings)
 
   // Sync pending state when parent settings change (e.g. after a new file upload resets to auto)
   useEffect(() => {
     setPending(settings)
   }, [settings])
+
+  if (!metadata) return null
 
   const hasChanges =
     pending.delimiter !== settings.delimiter ||
@@ -43,10 +45,10 @@ export default function ParsingSettings({ settings, metadata, onApply, disabled 
 
   return (
     <div className={styles.wrapper}>
-      <h3 className={styles.heading}>Parsing Settings</h3>
+      <h3 className={styles.heading}>{t.parsingSettings}</h3>
       <div className={styles.controls}>
         <label className={styles.field}>
-          <span className={styles.label}>Delimiter</span>
+          <span className={styles.label}>{t.labelDelimiter}</span>
           <select
             className={styles.select}
             value={pending.delimiter}
@@ -54,16 +56,16 @@ export default function ParsingSettings({ settings, metadata, onApply, disabled 
             disabled={disabled}
           >
             <option value="auto">
-              Auto (detected: {formatDelimiter(metadata.delimiter)})
+              {t.autoDetected} {formatDelimiter(metadata.delimiter, t)})
             </option>
-            <option value=",">Comma (,)</option>
-            <option value=";">Semicolon (;)</option>
-            <option value={'\t'}>Tab</option>
+            <option value=",">{t.optionComma}</option>
+            <option value=";">{t.optionSemicolon}</option>
+            <option value={'\t'}>{t.optionTab}</option>
           </select>
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>Decimal separator</span>
+          <span className={styles.label}>{t.labelDecimalSeparator}</span>
           <select
             className={styles.select}
             value={pending.decimal}
@@ -71,15 +73,15 @@ export default function ParsingSettings({ settings, metadata, onApply, disabled 
             disabled={disabled}
           >
             <option value="auto">
-              Auto (detected: {metadata.decimalSeparator === ',' ? 'Comma' : 'Dot'})
+              {t.autoDetected} {metadata.decimalSeparator === ',' ? t.detectedComma : t.detectedDot})
             </option>
-            <option value=".">Dot (.)</option>
-            <option value=",">Comma (,)</option>
+            <option value=".">{t.optionDot}</option>
+            <option value=",">{t.optionComma}</option>
           </select>
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>First row is header</span>
+          <span className={styles.label}>{t.labelFirstRowHeader}</span>
           <select
             className={styles.select}
             value={pending.hasHeader}
@@ -87,10 +89,10 @@ export default function ParsingSettings({ settings, metadata, onApply, disabled 
             disabled={disabled}
           >
             <option value="auto">
-              Auto (detected: {metadata.hasHeader ? 'Yes' : 'No'})
+              {t.autoDetected} {metadata.hasHeader ? t.yes : t.no})
             </option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
+            <option value="true">{t.yes}</option>
+            <option value="false">{t.no}</option>
           </select>
         </label>
       </div>
@@ -101,23 +103,23 @@ export default function ParsingSettings({ settings, metadata, onApply, disabled 
           onClick={handleApply}
           disabled={disabled || !hasChanges}
         >
-          Apply
+          {t.apply}
         </button>
         <button
           className={styles.resetButton}
           onClick={handleReset}
           disabled={disabled}
         >
-          Reset to Auto
+          {t.resetToAuto}
         </button>
       </div>
     </div>
   )
 }
 
-function formatDelimiter(d) {
-  if (d === ';') return 'Semicolon'
-  if (d === ',') return 'Comma'
-  if (d === '\t') return 'Tab'
+function formatDelimiter(d, t) {
+  if (d === ';') return t.detectedSemicolon
+  if (d === ',') return t.detectedComma
+  if (d === '\t') return t.detectedTab
   return d
 }

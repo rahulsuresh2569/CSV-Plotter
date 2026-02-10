@@ -13,6 +13,7 @@ import {
 } from 'chart.js'
 import 'chartjs-adapter-date-fns'
 import { Line, Scatter, Bar } from 'react-chartjs-2'
+import { useTranslation } from '../LanguageContext'
 import styles from './ChartView.module.css'
 
 // Register Chart.js components once
@@ -40,11 +41,7 @@ const SERIES_COLORS = [
   { border: '#84cc16', background: 'rgba(132, 204, 22, 0.5)' },
 ]
 
-const CHART_TYPES = [
-  { value: 'line', label: 'Line' },
-  { value: 'scatter', label: 'Scatter' },
-  { value: 'bar', label: 'Bar' },
-]
+const CHART_TYPES = ['line', 'scatter', 'bar']
 
 /**
  * Chart.js chart that plots selected X vs Y columns.
@@ -60,6 +57,9 @@ const CHART_TYPES = [
  */
 export default function ChartView({ columns, data, selectedXColumn, selectedYColumns, chartType, onChartTypeChange, darkMode }) {
   const chartRef = useRef(null)
+  const t = useTranslation()
+
+  const chartTypeLabels = { line: t.chartLine, scatter: t.chartScatter, bar: t.chartBar }
 
   const xColumn = columns?.find((c) => c.index === selectedXColumn) ?? null
   const yColumnsList = (selectedYColumns || [])
@@ -200,16 +200,16 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
         <div className={styles.chartTypeGroup}>
           {CHART_TYPES.map((ct) => (
             <button
-              key={ct.value}
-              className={`${styles.chartTypeBtn} ${chartType === ct.value ? styles.chartTypeBtnActive : ''}`}
-              onClick={() => onChartTypeChange(ct.value)}
+              key={ct}
+              className={`${styles.chartTypeBtn} ${chartType === ct ? styles.chartTypeBtnActive : ''}`}
+              onClick={() => onChartTypeChange(ct)}
             >
-              {ct.label}
+              {chartTypeLabels[ct]}
             </button>
           ))}
         </div>
         <button className={styles.exportBtn} onClick={handleExportPNG}>
-          Export PNG
+          {t.exportPng}
         </button>
       </div>
       <div className={styles.chartContainer}>

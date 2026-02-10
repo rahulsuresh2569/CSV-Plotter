@@ -1,3 +1,4 @@
+import { useTranslation } from '../LanguageContext'
 import styles from './StatusBar.module.css'
 
 /**
@@ -12,6 +13,8 @@ import styles from './StatusBar.module.css'
  *   showSettingsHint: boolean   — when true, error hint suggests adjusting settings
  */
 export default function StatusBar({ error, warnings, metadata, rowCount, columnCount, showSettingsHint }) {
+  const t = useTranslation()
+
   if (!error && !metadata) return null
 
   return (
@@ -23,11 +26,11 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
             <span>{error}</span>
             {showSettingsHint ? (
               <p className={styles.errorHint}>
-                Try adjusting the parsing settings below, or upload a different file.
+                {t.errorHintSettings}
               </p>
             ) : (
               <p className={styles.errorHint}>
-                Please check the file format and try uploading again.
+                {t.errorHintGeneric}
               </p>
             )}
           </div>
@@ -37,30 +40,30 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
       {metadata && (
         <div className={styles.infoBox}>
           <div className={styles.infoGrid}>
-            <span className={styles.infoLabel}>File</span>
+            <span className={styles.infoLabel}>{t.infoFile}</span>
             <span className={styles.infoValue}>{metadata.originalFileName}</span>
 
-            <span className={styles.infoLabel}>Rows</span>
+            <span className={styles.infoLabel}>{t.infoRows}</span>
             <span className={styles.infoValue}>{rowCount?.toLocaleString()}</span>
 
-            <span className={styles.infoLabel}>Columns</span>
+            <span className={styles.infoLabel}>{t.infoColumns}</span>
             <span className={styles.infoValue}>{columnCount}</span>
 
-            <span className={styles.infoLabel}>Delimiter</span>
-            <span className={styles.infoValue}>{formatDelimiter(metadata.delimiter)}</span>
+            <span className={styles.infoLabel}>{t.infoDelimiter}</span>
+            <span className={styles.infoValue}>{formatDelimiter(metadata.delimiter, t)}</span>
 
-            <span className={styles.infoLabel}>Decimal</span>
+            <span className={styles.infoLabel}>{t.infoDecimal}</span>
             <span className={styles.infoValue}>
-              {metadata.decimalSeparator === ',' ? 'Comma (,)' : 'Dot (.)'}
+              {metadata.decimalSeparator === ',' ? t.decimalComma : t.decimalDot}
             </span>
 
-            <span className={styles.infoLabel}>Header row</span>
-            <span className={styles.infoValue}>{metadata.hasHeader ? 'Yes' : 'No'}</span>
+            <span className={styles.infoLabel}>{t.infoHeaderRow}</span>
+            <span className={styles.infoValue}>{metadata.hasHeader ? t.yes : t.no}</span>
 
             {metadata.commentLinesSkipped > 0 && (
               <>
-                <span className={styles.infoLabel}>Comment lines</span>
-                <span className={styles.infoValue}>{metadata.commentLinesSkipped} skipped</span>
+                <span className={styles.infoLabel}>{t.infoCommentLines}</span>
+                <span className={styles.infoValue}>{metadata.commentLinesSkipped} {t.skipped}</span>
               </>
             )}
           </div>
@@ -81,9 +84,9 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
   )
 }
 
-function formatDelimiter(d) {
-  if (d === ';') return 'Semicolon (;)'
-  if (d === ',') return 'Comma (,)'
-  if (d === '\t') return 'Tab'
+function formatDelimiter(d, t) {
+  if (d === ';') return t.delimiterSemicolon
+  if (d === ',') return t.delimiterComma
+  if (d === '\t') return t.delimiterTab
   return d
 }

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useTranslation } from '../LanguageContext'
 import styles from './FileUpload.module.css'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
@@ -15,6 +16,7 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
   const [isDragOver, setIsDragOver] = useState(false)
   const [clientError, setClientError] = useState(null)
   const inputRef = useRef(null)
+  const t = useTranslation()
 
   function validateAndSelect(file) {
     setClientError(null)
@@ -23,13 +25,13 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
 
     // Client-side size check (server enforces too, but this gives instant feedback)
     if (file.size > MAX_FILE_SIZE) {
-      setClientError('This file exceeds the 10 MB limit. Please upload a smaller file.')
+      setClientError(t.fileSizeError)
       return
     }
 
     // Client-side extension check
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      setClientError('Please upload a file in CSV format (.csv).')
+      setClientError(t.fileTypeError)
       return
     }
 
@@ -96,7 +98,7 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
         {isUploading ? (
           <div className={styles.content}>
             <div className={styles.spinner} />
-            <p className={styles.label}>Parsing file...</p>
+            <p className={styles.label}>{t.parsingFile}</p>
           </div>
         ) : (
           <div className={styles.content}>
@@ -109,10 +111,10 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
             </div>
             <p className={styles.label}>
               {currentFileName
-                ? <>Drop a new file or click to replace <strong>{currentFileName}</strong></>
-                : 'Drag & drop a CSV file here, or click to browse'}
+                ? <>{t.dropToReplace} <strong>{currentFileName}</strong></>
+                : t.dragDropPrompt}
             </p>
-            <p className={styles.hint}>.csv files up to 10 MB</p>
+            <p className={styles.hint}>{t.fileHint}</p>
           </div>
         )}
       </div>

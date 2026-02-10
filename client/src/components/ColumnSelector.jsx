@@ -1,3 +1,4 @@
+import { useTranslation } from '../LanguageContext'
 import styles from './ColumnSelector.module.css'
 
 /**
@@ -22,6 +23,8 @@ export default function ColumnSelector({
   onXChange,
   onYChange,
 }) {
+  const t = useTranslation()
+
   if (!columns || columns.length === 0) return null
 
   function handleXChange(e) {
@@ -48,7 +51,7 @@ export default function ColumnSelector({
   return (
     <div className={styles.wrapper}>
       <div className={styles.panel}>
-        <h3 className={styles.heading}>X-Axis</h3>
+        <h3 className={styles.heading}>{t.xAxis}</h3>
         <select
           className={styles.select}
           value={selectedXColumn ?? ''}
@@ -63,7 +66,7 @@ export default function ColumnSelector({
       </div>
 
       <div className={styles.panel}>
-        <h3 className={styles.heading}>Y-Axis</h3>
+        <h3 className={styles.heading}>{t.yAxis}</h3>
         <div className={styles.checkboxList}>
           {yColumns.map((col) => {
             const isNumeric = col.type === 'numeric'
@@ -73,7 +76,7 @@ export default function ColumnSelector({
               <label
                 key={col.index}
                 className={`${styles.checkboxLabel} ${!isNumeric ? styles.disabled : ''}`}
-                title={!isNumeric ? 'Non-numeric columns cannot be used for Y-axis' : ''}
+                title={!isNumeric ? t.nonNumericHint : ''}
               >
                 <input
                   type="checkbox"
@@ -91,7 +94,7 @@ export default function ColumnSelector({
           })}
         </div>
         {selectedYColumns.length === 0 && (
-          <p className={styles.hint}>Select at least one numeric column to plot</p>
+          <p className={styles.hint}>{t.selectNumericHint}</p>
         )}
       </div>
     </div>
