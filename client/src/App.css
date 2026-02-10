@@ -85,11 +85,28 @@
   color: var(--color-text-primary);
 }
 
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.github-link:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
 .sample-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: -0.75rem;
 }
@@ -97,6 +114,11 @@
 .sample-label {
   font-size: 0.8rem;
   color: var(--color-text-tertiary);
+}
+
+.sample-btns {
+  display: flex;
+  gap: 0.5rem;
 }
 
 .sample-btn {
@@ -121,6 +143,58 @@
   cursor: not-allowed;
 }
 
+/* Loading skeletons */
+.skeleton-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skeleton-row {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.skeleton-block {
+  background: var(--color-bg-subtle);
+  border-radius: var(--radius-md);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.skeleton-table {
+  height: 180px;
+}
+
+.skeleton-panel {
+  flex: 1;
+  height: 100px;
+}
+
+.skeleton-chart {
+  height: 300px;
+}
+
+@keyframes shimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 3rem 1rem;
+  color: var(--color-text-muted);
+}
+
+.empty-state-text {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-text-tertiary);
+}
+
 .app-main {
   display: flex;
   flex-direction: column;
@@ -139,5 +213,27 @@
 
   .app-header h1 {
     font-size: 1.3rem;
+  }
+
+  .app-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .skeleton-row {
+    flex-direction: column;
+  }
+
+  .skeleton-chart {
+    height: 220px;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .sample-row {
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: -0.5rem;
   }
 }

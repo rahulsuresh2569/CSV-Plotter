@@ -70,6 +70,13 @@ const translations = {
 
     // Sample data
     trySample: 'Or try a sample file:',
+
+    // Empty state
+    emptyStateHint: 'Upload a CSV file or try a sample to get started',
+
+    // Toast
+    parseSuccess: 'File parsed successfully',
+    rows: 'rows',
   },
 
   de: {
@@ -143,6 +150,13 @@ const translations = {
 
     // Sample data
     trySample: 'Oder eine Beispieldatei testen:',
+
+    // Empty state
+    emptyStateHint: 'CSV-Datei hochladen oder ein Beispiel ausprobieren',
+
+    // Toast
+    parseSuccess: 'Datei erfolgreich verarbeitet',
+    rows: 'Zeilen',
   },
 }
 
