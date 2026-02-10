@@ -234,7 +234,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
           {t.exportPng}
         </button>
       </div>
-      <div className={styles.chartContainer}>
+      <div key={chartType} className={styles.chartContainer}>
         <ChartComponent ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
