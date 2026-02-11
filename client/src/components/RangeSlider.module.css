@@ -1,0 +1,84 @@
+.slider {
+  position: relative;
+  height: 32px;
+  width: 100%;
+  cursor: pointer;
+  touch-action: none;
+}
+
+/* Background track — thin, neutral */
+.track {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 6px;
+  transform: translateY(-50%);
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+/* Selected range pill — thicker, accent, visually dominant */
+.filled {
+  position: absolute;
+  top: 50%;
+  height: 10px;
+  transform: translateY(-50%);
+  background: var(--color-accent);
+  border-radius: 5px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: filter 0.15s ease;
+}
+
+.filled:hover {
+  filter: brightness(1.1);
+}
+
+.filled.grabbing {
+  cursor: grabbing;
+  filter: brightness(0.92);
+}
+
+/* Grip indicator — 3 vertical lines centered on the bar */
+.grip {
+  display: flex;
+  gap: 2.5px;
+  pointer-events: none;
+}
+
+.grip span {
+  width: 1.5px;
+  height: 10px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+/* Handles — white circles with subtle outline, overlapping the bar */
+.handle {
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border: 2px solid var(--color-accent);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  z-index: 1;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.handle:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.handle:active {
+  cursor: grabbing;
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+}

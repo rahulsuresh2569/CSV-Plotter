@@ -43,6 +43,12 @@
   color: #fff;
 }
 
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .exportBtn {
   padding: 0.35rem 0.9rem;
   border: 1px solid var(--color-border-strong);
@@ -60,6 +66,121 @@
   color: var(--color-text-primary);
 }
 
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.iconBtn:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.iconBtnActive {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* --- Row range controls --- */
+
+.rangeControls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.rangeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.presetGroup {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.presetBtn {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.presetBtn:hover {
+  background: var(--color-bg-subtle);
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.inputGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.inputLabel {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
+.rangeInput {
+  width: 5.5rem;
+  padding: 0.25rem 0.4rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-input);
+  color: var(--color-text-primary);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.rangeInput:focus {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+.rangeInput::-webkit-outer-spin-button,
+.rangeInput::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.rangeInput[type='number'] {
+  -moz-appearance: textfield;
+}
+
+.rangeInfo {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+}
+
+/* --- Chart container --- */
+
 .chartContainer {
   position: relative;
   height: 450px;
@@ -69,6 +190,13 @@
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   animation: chartFadeIn 0.3s ease;
+}
+
+.chartContainer:fullscreen {
+  height: 100vh;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 @keyframes chartFadeIn {
@@ -86,12 +214,22 @@
     align-self: flex-start;
   }
 
-  .exportBtn {
+  .toolbarActions {
     align-self: flex-start;
   }
 
   .chartContainer {
     height: 320px;
     padding: 0.75rem 0.5rem 0.25rem;
+  }
+
+  .rangeRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .inputGroup {
+    flex-wrap: wrap;
   }
 }

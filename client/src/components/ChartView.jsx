@@ -1,4 +1,4 @@
-import { useMemo, useRef } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,6 +14,7 @@ import {
 import 'chartjs-adapter-date-fns'
 import { Line, Scatter, Bar } from 'react-chartjs-2'
 import { useTranslation } from '../LanguageContext'
+import RangeSlider from './RangeSlider'
 import styles from './ChartView.module.css'
 
 // Register Chart.js components once
@@ -42,11 +43,8 @@ const SERIES_COLORS = [
 ]
 
 const CHART_TYPES = ['line', 'scatter', 'bar']
+const RANGE_THRESHOLD = 500
 
-/**
- * Uniformly sample `target` rows from `rows`, always including the
- * first and last row so the full X-axis range is preserved.
- */
 function decimateUniform(rows, target) {
   const n = rows.length
   if (n <= target) return rows
@@ -58,20 +56,10 @@ function decimateUniform(rows, target) {
   return result
 }
 
-/**
- * Chart.js chart that plots selected X vs Y columns.
- * Supports line, scatter, and bar chart types.
- *
- * Props:
- *   columns: [{ name, type, index }]
- *   data: [[value, ...], ...]  — all rows (full dataset)
- *   selectedXColumn: number (column index)
- *   selectedYColumns: number[] (column indices)
- *   chartType: 'line' | 'scatter' | 'bar'
- *   onChartTypeChange(type) — callback to switch chart type
- */
 export default function ChartView({ columns, data, selectedXColumn, selectedYColumns, chartType, onChartTypeChange, darkMode }) {
   const chartRef = useRef(null)
+  const containerRef = useRef(null)
+  const savedScrollY = useRef(0)
   const t = useTranslation()
 
   const chartTypeLabels = { line: t.chartLine, scatter: t.chartScatter, bar: t.chartBar }
@@ -81,10 +69,114 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     .map((idx) => columns?.find((c) => c.index === idx))
     .filter(Boolean)
 
-  // Determine if X is numeric — use linear scale; otherwise category
   const xIsNumeric = xColumn?.type === 'numeric'
   const xIsDate = xColumn?.type === 'date'
   const isBar = chartType === 'bar'
+
+  // --- Row range state (1-indexed, inclusive) ---
+  const totalRows = data?.length || 0
+  const [rangeFrom, setRangeFrom] = useState(1)
+  const [rangeTo, setRangeTo] = useState(1)
+  const [fromInput, setFromInput] = useState('1')
+  const [toInput, setToInput] = useState('1')
+
+  // Reset range when dataset changes
+  const prevTotal = useRef(0)
+  if (totalRows > 0 && totalRows !== prevTotal.current) {
+    prevTotal.current = totalRows
+    setRangeFrom(1)
+    setRangeTo(totalRows)
+    setFromInput('1')
+    setToInput(String(totalRows))
+  }
+
+  const clampedFrom = Math.max(1, Math.min(rangeFrom, totalRows || 1))
+  const clampedTo = Math.max(clampedFrom, Math.min(rangeTo, totalRows || 1))
+
+  // Range panel toggle — auto-expanded for large datasets
+  const [rangeOpen, setRangeOpen] = useState(false)
+  const prevTotalForToggle = useRef(0)
+  if (totalRows > 0 && totalRows !== prevTotalForToggle.current) {
+    prevTotalForToggle.current = totalRows
+    setRangeOpen(totalRows >= RANGE_THRESHOLD)
+  }
+
+  function commitFrom(val) {
+    const n = parseInt(val, 10)
+    if (isNaN(n)) {
+      setFromInput(String(clampedFrom))
+      return
+    }
+    const clamped = Math.max(1, Math.min(n, clampedTo))
+    setRangeFrom(clamped)
+    setFromInput(String(clamped))
+  }
+
+  function commitTo(val) {
+    const n = parseInt(val, 10)
+    if (isNaN(n)) {
+      setToInput(String(clampedTo))
+      return
+    }
+    const clamped = Math.max(clampedFrom, Math.min(n, totalRows))
+    setRangeTo(clamped)
+    setToInput(String(clamped))
+  }
+
+  function handleFromKeyDown(e) {
+    if (e.key === 'Enter') { e.target.blur(); commitFrom(fromInput) }
+  }
+  function handleToKeyDown(e) {
+    if (e.key === 'Enter') { e.target.blur(); commitTo(toInput) }
+  }
+
+  // Dual-handle slider change handler
+  function handleRangeSliderChange(newFrom, newTo) {
+    setRangeFrom(newFrom)
+    setRangeTo(newTo)
+    setFromInput(String(newFrom))
+    setToInput(String(newTo))
+  }
+
+  // Presets — chunk size adapts to dataset
+  const NICE_NUMBERS = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000]
+  function niceChunk(total) {
+    const raw = Math.round(total * 0.12)
+    for (const n of NICE_NUMBERS) {
+      if (n >= raw) return Math.min(n, total)
+    }
+    return total
+  }
+  const chunkSize = niceChunk(totalRows)
+
+  function setPreset(from, to) {
+    const cf = Math.max(1, Math.min(from, totalRows))
+    const ct = Math.max(cf, Math.min(to, totalRows))
+    setRangeFrom(cf)
+    setRangeTo(ct)
+    setFromInput(String(cf))
+    setToInput(String(ct))
+  }
+
+  // --- Fullscreen ---
+  function handleFullscreen() {
+    const el = containerRef.current
+    if (!el) return
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+    } else {
+      savedScrollY.current = window.scrollY
+      el.requestFullscreen().then(() => {
+        const onExit = () => {
+          if (!document.fullscreenElement) {
+            window.scrollTo(0, savedScrollY.current)
+            document.removeEventListener('fullscreenchange', onExit)
+          }
+        }
+        document.addEventListener('fullscreenchange', onExit)
+      })
+    }
+  }
 
   // Theme-aware colors for chart axes and grid
   const themeColors = useMemo(() => {
@@ -97,18 +189,19 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     }
   }, [darkMode])
 
-  // Build Chart.js data structure — memoized to avoid rebuilding on every render
+  // Build Chart.js data — slice to visible range, then decimate
   const chartData = useMemo(() => {
     if (!data || yColumnsList.length === 0) return { datasets: [] }
 
-    // Decimate bar and scatter charts: rendering thousands of individual
-    // bars or points is very slow, so uniformly sample for performance.
+    // Slice to visible range when range panel is active
+    const isSubset = rangeOpen && (clampedFrom > 1 || clampedTo < data.length)
+    const visibleData = isSubset ? data.slice(clampedFrom - 1, clampedTo) : data
+
     const MAX_POINTS = 500
     const isScatter = chartType === 'scatter'
-    const needsDecimation = (isBar || isScatter) && data.length > MAX_POINTS
-    const rows = needsDecimation ? decimateUniform(data, MAX_POINTS) : data
+    const needsDecimation = (isBar || isScatter) && visibleData.length > MAX_POINTS
+    const rows = needsDecimation ? decimateUniform(visibleData, MAX_POINTS) : visibleData
 
-    // Bar charts always use category scale for X-axis labels
     const labels = (isBar || (!xIsNumeric && !xIsDate))
       ? rows.map((row) => row[selectedXColumn])
       : undefined
@@ -136,7 +229,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     })
 
     return { labels, datasets }
-  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate, chartType, isBar])
+  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate, chartType, isBar, clampedFrom, clampedTo, rangeOpen])
 
   const options = useMemo(() => ({
     responsive: true,
@@ -230,11 +323,88 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
             </button>
           ))}
         </div>
-        <button className={styles.exportBtn} onClick={handleExportPNG}>
-          {t.exportPng}
-        </button>
+        <div className={styles.toolbarActions}>
+          <button
+            className={`${styles.iconBtn} ${rangeOpen ? styles.iconBtnActive : ''}`}
+            onClick={() => setRangeOpen((v) => !v)}
+            title={t.range}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14" />
+              <line x1="4" y1="10" x2="4" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12" y2="3" />
+              <line x1="20" y1="21" x2="20" y2="16" />
+              <line x1="20" y1="12" x2="20" y2="3" />
+              <line x1="1" y1="14" x2="7" y2="14" />
+              <line x1="9" y1="8" x2="15" y2="8" />
+              <line x1="17" y1="16" x2="23" y2="16" />
+            </svg>
+          </button>
+          <button className={styles.exportBtn} onClick={handleExportPNG}>
+            {t.exportPng}
+          </button>
+          <button className={styles.iconBtn} onClick={handleFullscreen} title={t.fullscreen}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
+            </svg>
+          </button>
+        </div>
       </div>
-      <div key={chartType} className={styles.chartContainer}>
+
+      {rangeOpen && (
+        <div className={styles.rangeControls}>
+          <div className={styles.rangeRow}>
+            <div className={styles.presetGroup}>
+              <button className={styles.presetBtn} onClick={() => setPreset(1, chunkSize)}>
+                {t.first} {chunkSize.toLocaleString()}
+              </button>
+              <button className={styles.presetBtn} onClick={() => setPreset(totalRows - chunkSize + 1, totalRows)}>
+                {t.last} {chunkSize.toLocaleString()}
+              </button>
+              <button className={styles.presetBtn} onClick={() => setPreset(1, totalRows)}>
+                {t.all}
+              </button>
+            </div>
+            <div className={styles.inputGroup}>
+              <label className={styles.inputLabel}>{t.from}</label>
+              <input
+                type="number"
+                className={styles.rangeInput}
+                value={fromInput}
+                min={1}
+                max={clampedTo}
+                onChange={(e) => setFromInput(e.target.value)}
+                onBlur={() => commitFrom(fromInput)}
+                onKeyDown={handleFromKeyDown}
+              />
+              <label className={styles.inputLabel}>{t.to}</label>
+              <input
+                type="number"
+                className={styles.rangeInput}
+                value={toInput}
+                min={clampedFrom}
+                max={totalRows}
+                onChange={(e) => setToInput(e.target.value)}
+                onBlur={() => commitTo(toInput)}
+                onKeyDown={handleToKeyDown}
+              />
+            </div>
+          </div>
+          <RangeSlider
+            min={1}
+            max={totalRows}
+            from={clampedFrom}
+            to={clampedTo}
+            onChange={handleRangeSliderChange}
+          />
+          <span className={styles.rangeInfo}>
+            {t.infoRows}: {clampedFrom.toLocaleString()}–{clampedTo.toLocaleString()} {t.of} {totalRows.toLocaleString()}
+          </span>
+        </div>
+      )}
+
+      <div ref={containerRef} key={chartType} className={styles.chartContainer}>
         <ChartComponent ref={chartRef} data={chartData} options={options} />
       </div>
     </div>
