@@ -61,12 +61,21 @@ const translations = {
     yAxis: 'Y-Axis',
     nonNumericHint: 'Non-numeric columns cannot be used for Y-axis',
     selectNumericHint: 'Select at least one numeric column to plot',
+    selectAll: 'Select all',
 
     // ChartView
     chartLine: 'Line',
     chartScatter: 'Scatter',
     chartBar: 'Bar',
     exportPng: 'Export PNG',
+    fullscreen: 'Fullscreen',
+    range: 'Range',
+    from: 'From',
+    to: 'To',
+    first: 'First',
+    last: 'Last',
+    all: 'All',
+    of: 'of',
 
     // Sample data
     trySample: 'Or try a sample file:',
@@ -141,12 +150,21 @@ const translations = {
     yAxis: 'Y-Achse',
     nonNumericHint: 'Nicht-numerische Spalten k\u00f6nnen nicht f\u00fcr die Y-Achse verwendet werden',
     selectNumericHint: 'Mindestens eine numerische Spalte zum Plotten ausw\u00e4hlen',
+    selectAll: 'Alle ausw\u00e4hlen',
 
     // ChartView
     chartLine: 'Linie',
     chartScatter: 'Punkte',
     chartBar: 'Balken',
     exportPng: 'PNG exportieren',
+    fullscreen: 'Vollbild',
+    range: 'Bereich',
+    from: 'Von',
+    to: 'Bis',
+    first: 'Erste',
+    last: 'Letzte',
+    all: 'Alle',
+    of: 'von',
 
     // Sample data
     trySample: 'Oder eine Beispieldatei testen:',

@@ -1,21 +1,6 @@
 import { useTranslation } from '../LanguageContext'
 import styles from './ColumnSelector.module.css'
 
-/**
- * Column selection controls for the chart.
- *
- * X-axis: single-select dropdown — any column is eligible.
- * Y-axis: checkboxes — only numeric columns are enabled;
- *         non-numeric columns are disabled with a tooltip.
- *         The column selected as X is excluded from Y options.
- *
- * Props:
- *   columns: [{ name, type, index }]
- *   selectedXColumn: number (column index)
- *   selectedYColumns: number[] (column indices)
- *   onXChange(index: number)
- *   onYChange(indices: number[])
- */
 export default function ColumnSelector({
   columns,
   selectedXColumn,
@@ -47,6 +32,19 @@ export default function ColumnSelector({
 
   // Columns available for Y: exclude the one selected as X
   const yColumns = columns.filter((col) => col.index !== selectedXColumn)
+  const numericYColumns = yColumns.filter((col) => col.type === 'numeric')
+
+  const allNumericSelected =
+    numericYColumns.length > 0 &&
+    numericYColumns.every((col) => selectedYColumns.includes(col.index))
+
+  function handleSelectAll() {
+    if (allNumericSelected) {
+      onYChange([])
+    } else {
+      onYChange(numericYColumns.map((col) => col.index))
+    }
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -66,7 +64,20 @@ export default function ColumnSelector({
       </div>
 
       <div className={styles.panel}>
-        <h3 className={styles.heading}>{t.yAxis}</h3>
+        <div className={styles.headingRow}>
+          <h3 className={styles.heading}>{t.yAxis}</h3>
+          {numericYColumns.length > 0 && (
+            <label className={styles.selectAllLabel}>
+              <input
+                type="checkbox"
+                checked={allNumericSelected}
+                onChange={handleSelectAll}
+                className={styles.checkbox}
+              />
+              <span className={styles.selectAllText}>{t.selectAll}</span>
+            </label>
+          )}
+        </div>
         <div className={styles.checkboxList}>
           {yColumns.map((col) => {
             const isNumeric = col.type === 'numeric'

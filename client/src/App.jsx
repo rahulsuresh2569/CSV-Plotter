@@ -114,11 +114,18 @@ function App() {
       const rowLabel = `${result.rowCount?.toLocaleString()} ${t.rows}`
       setToast(`${t.parseSuccess} \u2014 ${rowLabel}`)
 
-      // Auto-select first column as X, reset Y
+      // Auto-select first column as X, auto-select first few numeric Y columns
       if (result.columns.length > 0) {
         setSelectedXColumn(result.columns[0].index)
+        const MAX_AUTO_Y = 4
+        const numericY = result.columns
+          .filter((c) => c.index !== result.columns[0].index && c.type === 'numeric')
+          .slice(0, MAX_AUTO_Y)
+          .map((c) => c.index)
+        setSelectedYColumns(numericY)
+      } else {
+        setSelectedYColumns([])
       }
-      setSelectedYColumns([])
       setColumnNames({})
     } catch (err) {
       // axios wraps the response in err.response

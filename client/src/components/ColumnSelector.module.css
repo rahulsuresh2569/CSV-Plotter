@@ -23,6 +23,30 @@
   letter-spacing: 0.04em;
 }
 
+.headingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.headingRow .heading {
+  margin-bottom: 0;
+}
+
+.selectAllLabel {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.selectAllText {
+  font-size: 0.75rem;
+  color: var(--color-text-tertiary);
+  font-weight: 500;
+}
+
 .select {
   width: 100%;
   padding: 0.45rem 0.6rem;
