@@ -339,6 +339,20 @@ export function parseCSV(fileBuffer, overrides = {}) {
     }
   }
 
+  // Report non-numeric (string) values in numeric columns
+  for (const col of columns) {
+    if (col.type !== 'numeric') continue;
+    const stringCount = rows.filter((row) => {
+      const val = row[col.index];
+      return val !== null && typeof val === 'string';
+    }).length;
+    if (stringCount > 0) {
+      warnings.push(
+        `Column "${col.name}" has ${stringCount} non-numeric value${stringCount > 1 ? 's' : ''} that could not be converted to numbers.`,
+      );
+    }
+  }
+
   // --- Step 9: build response ----------------------------------------------
   const preview = rows.slice(0, 20);
 
