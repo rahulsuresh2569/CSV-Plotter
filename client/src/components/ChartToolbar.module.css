@@ -1,0 +1,126 @@
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  grid-column: 1 / -1;
+}
+
+.chartTypeGroup {
+  display: inline-flex;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.chartTypeBtn {
+  padding: 0 0.9rem;
+  height: 30px;
+  border: none;
+  border-right: 1px solid var(--color-border-strong);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.chartTypeBtn:last-child {
+  border-right: none;
+}
+
+.chartTypeBtn:hover:not(.chartTypeBtnActive) {
+  background: var(--color-bg-subtle);
+}
+
+.chartTypeBtnActive {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exportBtn {
+  padding: 0 0.9rem;
+  height: 32px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.exportBtn:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.iconBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.iconBtn:hover {
+  border-color: var(--color-border-hover);
+  color: var(--color-text-primary);
+}
+
+.iconBtnActive {
+  background: var(--color-accent-light);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.exportBtn:disabled,
+.iconBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.exportBtn:disabled:hover,
+.iconBtn:disabled:hover {
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 640px) {
+  .toolbar {
+    gap: 0.5rem;
+  }
+
+  .chartTypeBtn {
+    padding: 0 0.55rem;
+    height: 28px;
+    font-size: 0.72rem;
+  }
+
+  .exportBtn {
+    padding: 0 0.55rem;
+    height: 28px;
+    font-size: 0.72rem;
+  }
+
+  .iconBtn {
+    width: 28px;
+    height: 28px;
+  }
+}

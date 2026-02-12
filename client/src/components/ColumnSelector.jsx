@@ -104,9 +104,6 @@ export default function ColumnSelector({
             )
           })}
         </div>
-        {selectedYColumns.length === 0 && (
-          <p className={styles.hint}>{t.selectNumericHint}</p>
-        )}
       </div>
     </div>
   )

@@ -15,6 +15,7 @@ import 'chartjs-adapter-date-fns'
 import { Line, Scatter, Bar } from 'react-chartjs-2'
 import { useTranslation } from '../LanguageContext'
 import RangeSlider from './RangeSlider'
+import ChartToolbar from './ChartToolbar'
 import styles from './ChartView.module.css'
 
 // Register Chart.js components once
@@ -42,7 +43,6 @@ const SERIES_COLORS = [
   { border: '#84cc16', background: 'rgba(132, 204, 22, 0.5)' },
 ]
 
-const CHART_TYPES = ['line', 'scatter', 'bar']
 const RANGE_THRESHOLD = 500
 
 function decimateUniform(rows, target) {
@@ -61,8 +61,6 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   const containerRef = useRef(null)
   const savedScrollY = useRef(0)
   const t = useTranslation()
-
-  const chartTypeLabels = { line: t.chartLine, scatter: t.chartScatter, bar: t.chartBar }
 
   const xColumn = columns?.find((c) => c.index === selectedXColumn) ?? null
   const yColumnsList = (selectedYColumns || [])
@@ -158,6 +156,8 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setToInput(String(ct))
   }
 
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
   // --- Fullscreen ---
   function handleFullscreen() {
     const el = containerRef.current
@@ -167,8 +167,10 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     } else {
       savedScrollY.current = window.scrollY
       el.requestFullscreen().then(() => {
+        setIsFullscreen(true)
         const onExit = () => {
           if (!document.fullscreenElement) {
+            setIsFullscreen(false)
             window.scrollTo(0, savedScrollY.current)
             document.removeEventListener('fullscreenchange', onExit)
           }
@@ -295,7 +297,9 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     },
   }), [xColumn, yColumnsList, xIsNumeric, xIsDate, isBar, data?.length, themeColors])
 
-  if (!data || yColumnsList.length === 0 || selectedXColumn === null) return null
+  if (!data || selectedXColumn === null) return null
+
+  const hasYColumns = yColumnsList.length > 0
 
   function handleExportPNG() {
     const chart = chartRef.current
@@ -311,48 +315,17 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.toolbar}>
-        <div className={styles.chartTypeGroup}>
-          {CHART_TYPES.map((ct) => (
-            <button
-              key={ct}
-              className={`${styles.chartTypeBtn} ${chartType === ct ? styles.chartTypeBtnActive : ''}`}
-              onClick={() => onChartTypeChange(ct)}
-            >
-              {chartTypeLabels[ct]}
-            </button>
-          ))}
-        </div>
-        <div className={styles.toolbarActions}>
-          <button
-            className={`${styles.iconBtn} ${rangeOpen ? styles.iconBtnActive : ''}`}
-            onClick={() => setRangeOpen((v) => !v)}
-            title={t.range}
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="4" y1="21" x2="4" y2="14" />
-              <line x1="4" y1="10" x2="4" y2="3" />
-              <line x1="12" y1="21" x2="12" y2="12" />
-              <line x1="12" y1="8" x2="12" y2="3" />
-              <line x1="20" y1="21" x2="20" y2="16" />
-              <line x1="20" y1="12" x2="20" y2="3" />
-              <line x1="1" y1="14" x2="7" y2="14" />
-              <line x1="9" y1="8" x2="15" y2="8" />
-              <line x1="17" y1="16" x2="23" y2="16" />
-            </svg>
-          </button>
-          <button className={styles.exportBtn} onClick={handleExportPNG}>
-            {t.exportPng}
-          </button>
-          <button className={styles.iconBtn} onClick={handleFullscreen} title={t.fullscreen}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+      <ChartToolbar
+        chartType={chartType}
+        onChartTypeChange={onChartTypeChange}
+        rangeOpen={rangeOpen}
+        onRangeToggle={() => setRangeOpen((v) => !v)}
+        onExportPNG={handleExportPNG}
+        onFullscreen={handleFullscreen}
+        disabled={!hasYColumns}
+      />
 
-      {rangeOpen && (
+      {rangeOpen && hasYColumns && (
         <div className={styles.rangeControls}>
           <div className={styles.rangeRow}>
             <div className={styles.presetGroup}>
@@ -391,6 +364,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
               />
             </div>
           </div>
+          <span className={styles.rangeHint}>{t.rangeHint}</span>
           <RangeSlider
             min={1}
             max={totalRows}
@@ -405,7 +379,32 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
       )}
 
       <div ref={containerRef} key={chartType} className={styles.chartContainer}>
-        <ChartComponent ref={chartRef} data={chartData} options={options} />
+        {isFullscreen && (
+          <button
+            className={styles.exitFullscreenBtn}
+            onClick={() => document.exitFullscreen()}
+            title={t.exitFullscreen}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/>
+            </svg>
+            {t.exitFullscreen}
+          </button>
+        )}
+        {hasYColumns ? (
+          <ChartComponent ref={chartRef} data={chartData} options={options} />
+        ) : (
+          <div className={styles.placeholder}>
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="14" width="48" height="40" rx="3" stroke="currentColor" strokeWidth="1.5" opacity="0.25" />
+              <line x1="8" y1="26" x2="56" y2="26" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+              <line x1="24" y1="14" x2="24" y2="54" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+              <line x1="40" y1="14" x2="40" y2="54" stroke="currentColor" strokeWidth="1" opacity="0.15" />
+              <polyline points="14,48 22,40 30,44 38,32 46,36 52,30" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.35" strokeDasharray="3 3" />
+            </svg>
+            <p className={styles.placeholderText}>{t.selectNumericHint}</p>
+          </div>
+        )}
       </div>
     </div>
   )

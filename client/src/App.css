@@ -1,5 +1,5 @@
 .app {
-  max-width: 980px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
 }
@@ -201,6 +201,19 @@
   gap: 1.5rem;
 }
 
+.chart-section {
+  display: grid;
+  grid-template-columns: 1fr 200px;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.chart-section-sidebar {
+  grid-column: 2;
+  grid-row: 2 / 4;
+  align-self: start;
+}
+
 @media (max-width: 640px) {
   .app {
     padding: 1.25rem 1rem 3rem;
@@ -229,6 +242,15 @@
 
   .empty-state {
     padding: 2rem 1rem;
+  }
+
+  .chart-section {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-section-sidebar {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .sample-row {
