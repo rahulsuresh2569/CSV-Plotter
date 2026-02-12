@@ -1,0 +1,16 @@
+x,y
+alpha,low
+beta,medium
+gamma,high
+delta,"very high"
+epsilon,"contains,comma"
+zeta,"quoted ""double quotes"""
+eta," leading space"
+theta,"trailing space "
+iota,äöü
+kappa,"multi word label"
+lambda,"line break test"
+mu,unknown
+nu,N/A
+xi,error
+omicron,missing
