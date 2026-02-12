@@ -348,7 +348,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
     }).length;
     if (stringCount > 0) {
       warnings.push(
-        `Column "${col.name}" has ${stringCount} non-numeric value${stringCount > 1 ? 's' : ''} that could not be converted to numbers.`,
+        `Column "${col.name}" has ${stringCount} value${stringCount > 1 ? 's' : ''} that couldn't be parsed as number${stringCount > 1 ? 's' : ''} — ${stringCount > 1 ? 'these appear' : 'this appears'} as gap${stringCount > 1 ? 's' : ''} in the chart.`,
       );
     }
   }

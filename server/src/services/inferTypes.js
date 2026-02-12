@@ -72,6 +72,6 @@ export function inferColumnTypes(headerNames, rows) {
       }
     }
 
-    return { name, type, index };
+    return { name, type, index, numericCount, nonNullCount };
   });
 }
