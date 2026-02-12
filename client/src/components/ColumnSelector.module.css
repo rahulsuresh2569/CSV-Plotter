@@ -118,6 +118,13 @@
   margin-left: auto;
 }
 
+.overriddenBadge {
+  font-size: 0.65rem;
+  color: var(--color-accent);
+  font-weight: 500;
+  margin-left: auto;
+}
+
 .hint {
   margin: 0.5rem 0 0;
   font-size: 0.8rem;

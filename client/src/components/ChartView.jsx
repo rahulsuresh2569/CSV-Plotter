@@ -71,6 +71,9 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   const xIsDate = xColumn?.type === 'date'
   const isBar = chartType === 'bar'
 
+  // Coerce Y values: non-numeric → null (creates chart gaps via spanGaps: false)
+  const safeY = (val) => (typeof val === 'number' && isFinite(val)) ? val : null
+
   // --- Row range state (1-indexed, inclusive) ---
   const totalRows = data?.length || 0
   const [rangeFrom, setRangeFrom] = useState(1)
@@ -215,10 +218,10 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
       return {
         label: yCol.name,
         data: isBar
-          ? rows.map((row) => row[yCol.index])
+          ? rows.map((row) => safeY(row[yCol.index]))
           : rows.map((row) => ({
               x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
-              y: row[yCol.index],
+              y: safeY(row[yCol.index]),
             })),
         borderColor: color.border,
         backgroundColor: isBar ? color.background : color.background.replace('0.5', '0.1'),

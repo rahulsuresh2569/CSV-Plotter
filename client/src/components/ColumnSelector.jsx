@@ -82,6 +82,7 @@ export default function ColumnSelector({
           {yColumns.map((col) => {
             const isNumeric = col.type === 'numeric'
             const isChecked = selectedYColumns.includes(col.index)
+            const isOverridden = !!col.originalType
 
             return (
               <label
@@ -97,6 +98,9 @@ export default function ColumnSelector({
                   className={styles.checkbox}
                 />
                 <span className={styles.labelText}>{col.name}</span>
+                {isOverridden && (
+                  <span className={styles.overriddenBadge}>{t.overridden}</span>
+                )}
                 {!isNumeric && (
                   <span className={styles.typeHint}>{col.type}</span>
                 )}

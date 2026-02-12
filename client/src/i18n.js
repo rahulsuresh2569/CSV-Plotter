@@ -85,6 +85,14 @@ const translations = {
     // Empty state
     emptyStateHint: 'Upload a CSV file or try a sample to get started',
 
+    // Column override
+    overrideOffer: "Column \"{name}\" has {numeric} numeric values out of {total} rows but is classified as text.",
+    overrideActive: "Column \"{name}\" is being plotted as numeric — {bad} non-numeric values appear as gaps.",
+    plotAnyway: 'Plot anyway',
+    undoOverride: 'Undo',
+    overridden: 'overridden',
+    stringColumnsInfo: 'Non-numeric columns cannot be plotted on the Y-axis: {names}.',
+
     // Toast
     parseSuccess: 'File parsed successfully',
     rows: 'rows',
@@ -175,6 +183,14 @@ const translations = {
 
     // Empty state
     emptyStateHint: 'CSV-Datei hochladen oder ein Beispiel ausprobieren',
+
+    // Column override
+    overrideOffer: "Spalte \"{name}\" hat {numeric} numerische Werte von {total} Zeilen, wird aber als Text eingestuft.",
+    overrideActive: "Spalte \"{name}\" wird als numerisch geplottet \u2014 {bad} nicht-numerische Werte erscheinen als L\u00fccken.",
+    plotAnyway: 'Trotzdem plotten',
+    undoOverride: 'R\u00fcckg\u00e4ngig',
+    overridden: '\u00fcberschrieben',
+    stringColumnsInfo: 'Nicht-numerische Spalten k\u00f6nnen nicht auf der Y-Achse geplottet werden: {names}.',
 
     // Toast
     parseSuccess: 'Datei erfolgreich verarbeitet',
