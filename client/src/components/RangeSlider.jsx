@@ -1,47 +1,48 @@
-import { useRef, useCallback, useEffect, useState } from 'react'
+// RangeSlider.jsx: Dual-handle slider for selecting a row range
+import { useRef, useEffect, useState } from 'react'
 import styles from './RangeSlider.module.css'
 
 export default function RangeSlider({ min, max, from, to, onChange }) {
   const trackRef = useRef(null)
   const [drag, setDrag] = useState(null)
 
-  const xToVal = useCallback((clientX) => {
+  // Convert a mouse X position to a value in [min, max]
+  function xToVal(clientX) {
     const rect = trackRef.current.getBoundingClientRect()
     const fraction = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
     return Math.round(min + fraction * (max - min))
-  }, [min, max])
+  }
 
-  const valToPercent = useCallback((val) => {
+  // Convert a value to a percentage position on the track
+  function valToPercent(val) {
     if (max <= min) return 0
     return ((val - min) / (max - min)) * 100
-  }, [min, max])
+  }
 
-  // Handle drag on left handle
-  const handleFromDown = useCallback((e) => {
+  function handleFromDown(e) {
     e.preventDefault()
     e.stopPropagation()
     setDrag({ type: 'from' })
     document.body.style.userSelect = 'none'
-  }, [])
+  }
 
-  // Handle drag on right handle
-  const handleToDown = useCallback((e) => {
+  function handleToDown(e) {
     e.preventDefault()
     e.stopPropagation()
     setDrag({ type: 'to' })
     document.body.style.userSelect = 'none'
-  }, [])
+  }
 
-  // Handle drag on filled bar (sliding window)
-  const handleBarDown = useCallback((e) => {
+  // Start dragging the filled bar (slides the whole window)
+  function handleBarDown(e) {
     e.preventDefault()
     e.stopPropagation()
     setDrag({ type: 'bar', startX: e.clientX, startFrom: from, startTo: to })
     document.body.style.userSelect = 'none'
-  }, [from, to])
+  }
 
-  // Click on empty track area — move nearest handle
-  const handleTrackDown = useCallback((e) => {
+  // Click on empty track area — move the nearest handle
+  function handleTrackDown(e) {
     const val = xToVal(e.clientX)
     const distFrom = Math.abs(val - from)
     const distTo = Math.abs(val - to)
@@ -50,12 +51,14 @@ export default function RangeSlider({ min, max, from, to, onChange }) {
     } else {
       onChange(from, Math.max(from, Math.min(val, max)))
     }
-  }, [from, to, min, max, xToVal, onChange])
+  }
 
+  // Global pointer listeners while dragging (useEffect is needed here
+  // because we need to track mouse movement outside the component)
   useEffect(() => {
     if (!drag) return
 
-    const handleMove = (e) => {
+    function handleMove(e) {
       if (!trackRef.current) return
       const rect = trackRef.current.getBoundingClientRect()
       const pxPerVal = rect.width / (max - min || 1)
@@ -80,7 +83,7 @@ export default function RangeSlider({ min, max, from, to, onChange }) {
       }
     }
 
-    const handleUp = () => {
+    function handleUp() {
       setDrag(null)
       document.body.style.userSelect = ''
     }
@@ -91,7 +94,7 @@ export default function RangeSlider({ min, max, from, to, onChange }) {
       document.removeEventListener('pointermove', handleMove)
       document.removeEventListener('pointerup', handleUp)
     }
-  }, [drag, from, to, min, max, xToVal, onChange])
+  }, [drag, from, to, min, max, onChange])
 
   const fromPct = valToPercent(from)
   const toPct = valToPercent(to)
