@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '../LanguageContext'
 import styles from './StatusBar.module.css'
 
@@ -14,6 +15,16 @@ import styles from './StatusBar.module.css'
  */
 export default function StatusBar({ error, warnings, metadata, rowCount, columnCount, showSettingsHint, columns, overriddenColumns, onOverride, onUndoOverride }) {
   const t = useTranslation()
+
+  // Track dismissed warning state — resets when warnings change (new file upload)
+  const [warningsDismissed, setWarningsDismissed] = useState(false)
+  const prevWarningsRef = useRef(warnings)
+  useEffect(function () {
+    if (warnings !== prevWarningsRef.current) {
+      setWarningsDismissed(false)
+      prevWarningsRef.current = warnings
+    }
+  }, [warnings])
 
   // Columns that are string-typed but have >= 30% numeric values (overridable)
   const overridableColumns = (columns || []).filter((col) => {
@@ -92,12 +103,21 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
         </div>
       )}
 
-      {warnings && warnings.length > 0 && (
+      {warnings && warnings.length > 0 && !warningsDismissed && (
         <div className={styles.warningBox}>
+          <div className={styles.warningHeader}>
+            <span className={styles.warningTitle}>{t.warningsTitle}</span>
+            <button
+              className={styles.dismissBtn}
+              onClick={function () { setWarningsDismissed(true) }}
+              title={t.dismissWarnings}
+              aria-label={t.dismissWarnings}
+            >&times;</button>
+          </div>
           {warnings.map((w, i) => (
             <p key={i} className={styles.warningLine}>
               <span className={styles.warningIcon}>!</span>
-              {w}
+              {formatWarning(w, t)}
             </p>
           ))}
         </div>
@@ -150,6 +170,22 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
       )}
     </div>
   )
+}
+
+function formatWarning(w, t) {
+  // Structured warning object from the backend
+  if (w && typeof w === 'object' && w.key) {
+    var template = t[w.key]
+    if (!template) return w.key
+    var result = template
+    var params = w.params || {}
+    for (var key in params) {
+      result = result.replace('{' + key + '}', params[key])
+    }
+    return result
+  }
+  // Fallback: plain string (legacy or unexpected format)
+  return String(w)
 }
 
 function formatDelimiter(d, t) {

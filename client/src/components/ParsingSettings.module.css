@@ -7,18 +7,43 @@
 }
 
 .heading {
-  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  cursor: pointer;
+  user-select: none;
+}
+
+.heading:hover {
+  color: var(--color-text-primary);
+}
+
+.chevron {
+  display: inline-block;
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+  transform: rotate(0deg);
+}
+
+.chevronOpen {
+  transform: rotate(90deg);
 }
 
 .controls {
   display: flex;
   gap: 1.25rem;
   flex-wrap: wrap;
+  margin-top: 0.75rem;
 }
 
 .field {

@@ -275,7 +275,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
 
   if (parseResult.errors.length > 0) {
     const firstErr = parseResult.errors[0];
-    warnings.push(`CSV parse warning on row ${firstErr.row}: ${firstErr.message}`);
+    warnings.push({ key: 'warningParseError', params: { row: firstErr.row, message: firstErr.message } });
   }
 
   let rows = parseResult.data;
@@ -286,9 +286,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
   rows = rows.filter((row) => row.length === expectedCols);
   if (rows.length < beforeCount) {
     const skipped = beforeCount - rows.length;
-    warnings.push(
-      `${skipped} row(s) had an unexpected number of columns and were skipped.`,
-    );
+    warnings.push({ key: 'warningRaggedRows', params: { count: skipped } });
   }
 
   // --- Step 6: normalise decimals ------------------------------------------
@@ -324,18 +322,14 @@ export function parseCSV(fileBuffer, overrides = {}) {
 
   const hasNumeric = columns.some((c) => c.type === 'numeric');
   if (!hasNumeric) {
-    warnings.push(
-      'No numeric columns were found. The Y-axis requires at least one numeric column.',
-    );
+    warnings.push({ key: 'warningNoNumericColumns' });
   }
 
   // Report missing values per column
   for (const col of columns) {
     const nullCount = rows.filter((row) => row[col.index] === null).length;
     if (nullCount > 0) {
-      warnings.push(
-        `Column "${col.name}" has ${nullCount} missing value${nullCount > 1 ? 's' : ''} — these will appear as gaps in the chart.`,
-      );
+      warnings.push({ key: 'warningMissingValues', params: { column: col.name, count: nullCount } });
     }
   }
 
@@ -347,9 +341,7 @@ export function parseCSV(fileBuffer, overrides = {}) {
       return val !== null && typeof val === 'string';
     }).length;
     if (stringCount > 0) {
-      warnings.push(
-        `Column "${col.name}" has ${stringCount} value${stringCount > 1 ? 's' : ''} that couldn't be parsed as number${stringCount > 1 ? 's' : ''} — ${stringCount > 1 ? 'these appear' : 'this appears'} as gap${stringCount > 1 ? 's' : ''} in the chart.`,
-      );
+      warnings.push({ key: 'warningUnparseable', params: { column: col.name, count: stringCount } });
     }
   }
 

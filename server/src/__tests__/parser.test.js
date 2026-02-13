@@ -31,6 +31,13 @@ function toBuffer(text) {
   return Buffer.from(text, 'utf-8');
 }
 
+function hasWarningKey(warnings, key) {
+  for (var i = 0; i < warnings.length; i++) {
+    if (warnings[i] && warnings[i].key === key) return true;
+  }
+  return false;
+}
+
 // ---------------------------------------------------------------------------
 // preprocessLines
 // ---------------------------------------------------------------------------
@@ -341,40 +348,22 @@ describe('parseCSV — warnings', function () {
   it('warns about ragged rows', function () {
     var buf = loadTestFile('09_inconsistent_row_lengths.csv');
     var result = parseCSV(buf);
-    var raggedWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('unexpected number of columns')) {
-        raggedWarning = true;
-        break;
-      }
-    }
-    expect(raggedWarning).toBe(true);
+    var found = hasWarningKey(result.warnings, 'warningRaggedRows');
+    expect(found).toBe(true);
   });
 
   it('warns about missing values', function () {
     var buf = loadTestFile('03_missing_values.csv');
     var result = parseCSV(buf);
-    var missingWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('missing value')) {
-        missingWarning = true;
-        break;
-      }
-    }
-    expect(missingWarning).toBe(true);
+    var found = hasWarningKey(result.warnings, 'warningMissingValues');
+    expect(found).toBe(true);
   });
 
   it('warns when no numeric columns are found', function () {
     var buf = loadTestFile('16_all_strings_two_columns.csv');
     var result = parseCSV(buf);
-    var noNumericWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('No numeric columns')) {
-        noNumericWarning = true;
-        break;
-      }
-    }
-    expect(noNumericWarning).toBe(true);
+    var found = hasWarningKey(result.warnings, 'warningNoNumericColumns');
+    expect(found).toBe(true);
   });
 
   it('warns about string values in numeric columns', function () {
@@ -383,14 +372,8 @@ describe('parseCSV — warnings', function () {
     // classified as "numeric" but the remaining 10% strings trigger a warning.
     var buf = loadTestFile('17_reducing_numeric_ratio_columns.csv');
     var result = parseCSV(buf);
-    var stringInNumericWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes("couldn't be parsed as number")) {
-        stringInNumericWarning = true;
-        break;
-      }
-    }
-    expect(stringInNumericWarning).toBe(true);
+    var found = hasWarningKey(result.warnings, 'warningUnparseable');
+    expect(found).toBe(true);
   });
 });
 
@@ -468,14 +451,7 @@ describe('parseCSV — integration: test-data files', function () {
     expect(result.metadata.hasHeader).toBe(true);
 
     // Should have missing value warnings
-    var hasMissingWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('missing value')) {
-        hasMissingWarning = true;
-        break;
-      }
-    }
-    expect(hasMissingWarning).toBe(true);
+    expect(hasWarningKey(result.warnings, 'warningMissingValues')).toBe(true);
 
     // Some cells should be null
     var hasNull = false;
@@ -549,14 +525,7 @@ describe('parseCSV — integration: test-data files', function () {
     expect(result.columns.length).toBe(3);
     // Should skip ragged rows (row with 2 cols and row with 4 cols)
     expect(result.rowCount).toBe(2);
-    var raggedWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('unexpected number of columns')) {
-        raggedWarning = true;
-        break;
-      }
-    }
-    expect(raggedWarning).toBe(true);
+    expect(hasWarningKey(result.warnings, 'warningRaggedRows')).toBe(true);
   });
 
   it('10: datetime x-axis', function () {
@@ -620,14 +589,7 @@ describe('parseCSV — integration: test-data files', function () {
     expect(result.columns[0].type).toBe('string');
     expect(result.columns[1].type).toBe('string');
     // Should warn about no numeric columns
-    var noNumericWarning = false;
-    for (var i = 0; i < result.warnings.length; i++) {
-      if (result.warnings[i].includes('No numeric columns')) {
-        noNumericWarning = true;
-        break;
-      }
-    }
-    expect(noNumericWarning).toBe(true);
+    expect(hasWarningKey(result.warnings, 'warningNoNumericColumns')).toBe(true);
   });
 
   it('17: reducing numeric ratio columns (90/75/60/45/30/15%)', function () {

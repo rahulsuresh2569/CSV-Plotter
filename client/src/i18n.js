@@ -92,6 +92,28 @@ const translations = {
     undoOverride: 'Undo',
     overridden: 'overridden',
     stringColumnsInfo: 'Non-numeric columns cannot be plotted on the Y-axis: {names}.',
+    warningsTitle: 'Warnings',
+    dismissWarnings: 'Dismiss warnings',
+
+    // Backend warnings
+    warningParseError: 'CSV parse warning on row {row}: {message}',
+    warningRaggedRows: '{count} row(s) had an unexpected number of columns and were skipped.',
+    warningNoNumericColumns: 'No numeric columns were found. The Y-axis requires at least one numeric column.',
+    warningMissingValues: 'Column "{column}" has {count} missing value(s) — these appear as gaps in the chart.',
+    warningUnparseable: 'Column "{column}" has {count} value(s) that couldn\'t be parsed as numbers — these appear as gaps in the chart.',
+
+    // Backend errors (keyed by error code)
+    error_FILE_TOO_LARGE: 'This file exceeds the 10 MB limit. Please upload a smaller file.',
+    error_UPLOAD_ERROR: 'Error processing the uploaded file.',
+    error_NO_FILE: 'No file was uploaded.',
+    error_EMPTY_FILE: 'The uploaded file is empty. Please select a CSV file with data.',
+    error_INVALID_TYPE: 'Please upload a file in CSV format (.csv).',
+    error_BINARY_FILE: 'This file appears to be binary, not a CSV text file.',
+    error_NO_DATA: 'The file contains no data rows.',
+    error_NO_DATA_ROWS: 'The file contains headers but no data rows.',
+    error_TOO_FEW_COLUMNS: 'Only one column was detected. A chart needs at least two columns (one for X and one for Y).',
+    error_SERVER_ERROR: 'Internal server error.',
+    error_NO_NUMERIC_COLUMNS: 'No numeric columns were found. The Y-axis requires at least one numeric column. Please upload a file with numeric data.',
 
     // Toast
     parseSuccess: 'File parsed successfully',
@@ -191,6 +213,28 @@ const translations = {
     undoOverride: 'R\u00fcckg\u00e4ngig',
     overridden: '\u00fcberschrieben',
     stringColumnsInfo: 'Nicht-numerische Spalten k\u00f6nnen nicht auf der Y-Achse geplottet werden: {names}.',
+    warningsTitle: 'Warnungen',
+    dismissWarnings: 'Warnungen ausblenden',
+
+    // Backend warnings
+    warningParseError: 'CSV-Parsewarnung in Zeile {row}: {message}',
+    warningRaggedRows: '{count} Zeile(n) hatten eine unerwartete Spaltenanzahl und wurden \u00fcbersprungen.',
+    warningNoNumericColumns: 'Keine numerischen Spalten gefunden. Die Y-Achse ben\u00f6tigt mindestens eine numerische Spalte.',
+    warningMissingValues: 'Spalte \u201e{column}\u201c hat {count} fehlende(n) Wert(e) \u2014 diese erscheinen als L\u00fccken im Diagramm.',
+    warningUnparseable: 'Spalte \u201e{column}\u201c hat {count} Wert(e), die nicht als Zahl erkannt wurden \u2014 diese erscheinen als L\u00fccken im Diagramm.',
+
+    // Backend errors (keyed by error code)
+    error_FILE_TOO_LARGE: 'Diese Datei \u00fcberschreitet das 10-MB-Limit. Bitte eine kleinere Datei hochladen.',
+    error_UPLOAD_ERROR: 'Fehler beim Verarbeiten der hochgeladenen Datei.',
+    error_NO_FILE: 'Es wurde keine Datei hochgeladen.',
+    error_EMPTY_FILE: 'Die hochgeladene Datei ist leer. Bitte eine CSV-Datei mit Daten ausw\u00e4hlen.',
+    error_INVALID_TYPE: 'Bitte eine Datei im CSV-Format (.csv) hochladen.',
+    error_BINARY_FILE: 'Diese Datei scheint eine Bin\u00e4rdatei zu sein, keine CSV-Textdatei.',
+    error_NO_DATA: 'Die Datei enth\u00e4lt keine Datenzeilen.',
+    error_NO_DATA_ROWS: 'Die Datei enth\u00e4lt Kopfzeilen, aber keine Datenzeilen.',
+    error_TOO_FEW_COLUMNS: 'Nur eine Spalte erkannt. Ein Diagramm ben\u00f6tigt mindestens zwei Spalten (eine f\u00fcr X und eine f\u00fcr Y).',
+    error_SERVER_ERROR: 'Interner Serverfehler.',
+    error_NO_NUMERIC_COLUMNS: 'Keine numerischen Spalten gefunden. Die Y-Achse ben\u00f6tigt mindestens eine numerische Spalte. Bitte eine Datei mit numerischen Daten hochladen.',
 
     // Toast
     parseSuccess: 'Datei erfolgreich verarbeitet',

@@ -37,7 +37,7 @@ function App() {
   // Metadata persisted separately — survives parse errors so ParsingSettings stays visible
   const [lastMetadata, setLastMetadata] = useState(null)
 
-  // Error from upload or parse
+  // Error from upload or parse — stores { code, fallback } so translation happens at render time
   const [error, setError] = useState(null)
 
   // Column selections
@@ -113,6 +113,20 @@ function App() {
 
     try {
       const result = await uploadCSV(fileToUpload, settings)
+
+      // Promote "no numeric columns" from warning to error — chart cannot be plotted
+      var noNumericIdx = -1
+      for (var i = 0; i < (result.warnings || []).length; i++) {
+        if (result.warnings[i] && result.warnings[i].key === 'warningNoNumericColumns') {
+          noNumericIdx = i
+          break
+        }
+      }
+      if (noNumericIdx !== -1) {
+        result.warnings.splice(noNumericIdx, 1)
+        setError({ code: 'NO_NUMERIC_COLUMNS', fallback: 'No numeric columns found.' })
+      }
+
       setParseResult(result)
       setLastMetadata(result.metadata)
 
@@ -137,17 +151,17 @@ function App() {
     } catch (err) {
       // axios wraps the response in err.response
       const data = err.response?.data
-      const message =
-        data?.error ||
-        err.message ||
-        'An unexpected error occurred. Please try again.'
+
+      // Store code + fallback — translation happens at render time so language switches apply
+      const errorCode = data?.code || null
+      const fallback = data?.error || err.message || 'An unexpected error occurred.'
 
       // Persist metadata from error response if available
       if (data?.metadata) {
         setLastMetadata(data.metadata)
       }
 
-      setError(message)
+      setError({ code: errorCode, fallback })
       setParseResult(null)
       setSelectedXColumn(null)
       setSelectedYColumns([])
@@ -201,6 +215,10 @@ function App() {
     setSelectedYColumns((prev) =>
       prev.includes(colIndex) ? prev : [...prev, colIndex]
     )
+    // Clear "no numeric columns" error when user forces a column to numeric
+    if (error && error.code === 'NO_NUMERIC_COLUMNS') {
+      setError(null)
+    }
   }
 
   function handleUndoOverride(colIndex) {
@@ -284,7 +302,7 @@ function App() {
           </div>
 
           <StatusBar
-            error={error}
+            error={error ? (t['error_' + error.code] || error.fallback) : null}
             warnings={parseResult?.warnings || []}
             metadata={parseResult?.metadata || null}
             rowCount={parseResult?.rowCount || null}
