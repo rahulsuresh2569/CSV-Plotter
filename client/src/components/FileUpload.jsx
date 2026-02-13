@@ -4,14 +4,7 @@ import styles from './FileUpload.module.css'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10 MB
 
-/**
- * Drag-and-drop + click-to-browse file upload area.
- *
- * Props:
- *   onFileSelect(file: File) — called when a valid file is chosen
- *   isUploading: boolean      — shows a loading indicator
- *   currentFileName: string|null — name of the currently loaded file
- */
+//drag-and-drop +click-to-browse file upload area
 export default function FileUpload({ onFileSelect, isUploading, currentFileName }) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [clientError, setClientError] = useState(null)
@@ -23,13 +16,13 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
 
     if (!file) return
 
-    // Client-side size check (server enforces too, but this gives instant feedback)
+    //client-side size check (server enforces too, but this gives instant feedback)
     if (file.size > MAX_FILE_SIZE) {
       setClientError(t.fileSizeError)
       return
     }
 
-    // Client-side extension check
+    //client-side extension check
     if (!file.name.toLowerCase().endsWith('.csv')) {
       setClientError(t.fileTypeError)
       return
@@ -64,7 +57,7 @@ export default function FileUpload({ onFileSelect, isUploading, currentFileName 
   function handleInputChange(e) {
     const file = e.target.files[0]
     validateAndSelect(file)
-    // Reset the input so the same file can be re-selected
+    //reset the input so the same file can be re-selected
     e.target.value = ''
   }
 

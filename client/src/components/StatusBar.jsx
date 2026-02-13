@@ -1,18 +1,8 @@
+//StatusBar.jsx: displays file metadata,parsing errors, warnings,and column override offers
 import { useState, useRef, useEffect } from 'react'
 import { useTranslation } from '../LanguageContext'
 import styles from './StatusBar.module.css'
 
-/**
- * Displays file metadata, parsing errors, and warnings.
- *
- * Props:
- *   error: string|null          — a top-level error message (upload/parse failure)
- *   warnings: string[]          — parsing warnings from the backend
- *   metadata: object|null       — { delimiter, decimalSeparator, hasHeader, commentLinesSkipped, originalFileName }
- *   rowCount: number|null       — total data rows
- *   columnCount: number|null    — total columns
- *   showSettingsHint: boolean   — when true, error hint suggests adjusting settings
- */
 export default function StatusBar({ error, warnings, metadata, rowCount, columnCount, showSettingsHint, columns, overriddenColumns, onOverride, onUndoOverride }) {
   const t = useTranslation()
 
@@ -36,7 +26,7 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
     return ratio >= 0.3 && ratio < 0.9
   })
 
-  // Purely string columns (< 30% numeric, not overridable) — for info message
+  //purely string columns (<30% numeric, not overridable) -for info message
   const stringOnlyColumns = (columns || []).filter((col) => {
     if (col.type === 'numeric' || col.type === 'date') return false
     if (col.originalType) return false // overridden, skip
@@ -173,18 +163,16 @@ export default function StatusBar({ error, warnings, metadata, rowCount, columnC
 }
 
 function formatWarning(w, t) {
-  // Structured warning object from the backend
   if (w && typeof w === 'object' && w.key) {
-    var template = t[w.key]
+    let template = t[w.key]
     if (!template) return w.key
-    var result = template
-    var params = w.params || {}
-    for (var key in params) {
+    let result = template
+    const params = w.params || {}
+    for (const key in params) {
       result = result.replace('{' + key + '}', params[key])
     }
     return result
   }
-  // Fallback: plain string (legacy or unexpected format)
   return String(w)
 }
 

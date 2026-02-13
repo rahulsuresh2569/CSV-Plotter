@@ -1,4 +1,4 @@
-// ChartView.jsx: Renders the chart with range controls, fullscreen, and export
+//ChartView.jsx: renders the chart with range controls, fullscreen, and export
 import { useState, useMemo, useRef } from 'react'
 import {
   Chart as ChartJS,
@@ -20,7 +20,7 @@ import RangeSlider from './RangeSlider'
 import ChartToolbar from './ChartToolbar'
 import styles from './ChartView.module.css'
 
-// Register Chart.js components once
+//register Chart.js components once
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -76,7 +76,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   const clampedFrom = Math.max(1, Math.min(rangeFrom, totalRows || 1))
   const clampedTo = Math.max(clampedFrom, Math.min(rangeTo, totalRows || 1))
 
-  // Auto-expand range panel for large datasets
+  //auto-expand range panel for large datasets
   const [rangeOpen, setRangeOpen] = useState(false)
   const prevTotalForToggle = useRef(0)
   if (totalRows > 0 && totalRows !== prevTotalForToggle.current) {
@@ -84,7 +84,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setRangeOpen(totalRows >= RANGE_THRESHOLD)
   }
 
-  // Validate and apply the "from" input value
+  //validate and apply the "from" input value
   function applyFromValue(val) {
     const n = parseInt(val, 10)
     if (isNaN(n)) {
@@ -96,7 +96,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setFromInput(String(clamped))
   }
 
-  // Validate and apply the "to" input value
+  //validate and apply the "to" input value
   function applyToValue(val) {
     const n = parseInt(val, 10)
     if (isNaN(n)) {
@@ -122,7 +122,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setToInput(String(newTo))
   }
 
-  // Pick a chunk size for preset buttons (roughly 12% of total, rounded to a clean number)
+  //pick a chunk size for preset buttons (roughly 12% of total, rounded to a clean number)
   const NICE_NUMBERS = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000]
   function niceChunk(total) {
     const raw = Math.round(total * 0.12)
@@ -165,7 +165,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     }
   }
 
-  // Memoized: reads CSS variables from DOM, only re-runs on theme change
+  //memoized: reads CSS variables from DOM, only re-runs on theme change
   const themeColors = useMemo(() => {
     const s = getComputedStyle(document.documentElement)
     return {
@@ -176,27 +176,27 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     }
   }, [darkMode])
 
-  // Memoized: building chart arrays is expensive for large datasets (50k+ rows)
+  //memoized: building chart arrays is expensive for large datasets (50k+ rows)
   const chartData = useMemo(() => {
     if (!data || yColumnsList.length === 0) return { datasets: [] }
 
-    // Step 1: slice to visible range
+    //step 1: slice to visible range
     const isSubset = rangeOpen && (clampedFrom > 1 || clampedTo < data.length)
     const visibleRows = isSubset ? sliceRows(data, clampedFrom, clampedTo) : data
 
-    // Step 2: downsample for bar/scatter if too many points
+    //step 2: downsample for bar/scatter if too many points
     const isScatter = chartType === 'scatter'
     const needsDecimation = (isBar || isScatter) && visibleRows.length > MAX_POINTS
     const rows = needsDecimation ? downsampleRows(visibleRows, MAX_POINTS) : visibleRows
 
-    // Step 3: build labels and datasets
+    //step 3: build labels and datasets
     const labels = buildLabels(rows, selectedXColumn, xType, chartType)
     const datasets = buildDatasets(rows, selectedXColumn, yColumnsList, chartType, xType)
 
     return { labels, datasets }
   }, [data, selectedXColumn, yColumnsList, xType, chartType, isBar, clampedFrom, clampedTo, rangeOpen])
 
-  // Memoized: prevents Chart.js full re-render when the options object reference changes
+  //memoized: prevents Chart.js full re-render when the options object reference changes
   const options = useMemo(() => {
     const xScaleType = getXScaleType(chartType, xType)
 

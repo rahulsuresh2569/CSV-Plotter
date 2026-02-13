@@ -1,4 +1,4 @@
-// App.jsx: Root component — orchestrates file upload, parsing, column selection, and chart rendering
+//App.jsx: root component -orchestrates file upload, parsing, column selection, and chart rendering
 import { useState } from 'react'
 import FileUpload from './components/FileUpload'
 import StatusBar from './components/StatusBar'
@@ -39,7 +39,7 @@ function App() {
   const [chartType, setChartType] = useState('line')
   const [toast, setToast] = useState(null)
 
-  // Dark mode — sync data-theme attribute so CSS variables apply immediately
+  //dark mode -sync data-theme attribute so CSS variables apply immediately
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('csv-plotter-theme') === 'dark'
     document.documentElement.setAttribute('data-theme', saved ? 'dark' : 'light')
@@ -69,7 +69,7 @@ function App() {
 
   const t = translations[language] || translations.en
 
-  // Merge custom names and type overrides into columns on every render (cheap for 5-20 cols)
+  //merge custom names and type overrides into columns on every render (cheap for 5-20 cols)
   const columns = mergeColumnsWithOverrides(
     parseResult?.columns || [],
     columnNames,
@@ -83,7 +83,7 @@ function App() {
     try {
       const result = await uploadCSV(fileToUpload, settings)
 
-      // Promote "no numeric columns" from warning to error — chart cannot render
+      //promote "no numeric columns" from warning to error -chart cannot render
       let noNumericIdx = -1
       for (let i = 0; i < (result.warnings || []).length; i++) {
         if (result.warnings[i] && result.warnings[i].key === 'warningNoNumericColumns') {
@@ -102,7 +102,7 @@ function App() {
       const rowLabel = `${result.rowCount?.toLocaleString()} ${t.rows}`
       setToast(`${t.parseSuccess} \u2014 ${rowLabel}`)
 
-      // Auto-select default X and Y columns
+      //auto-select default X and Y columns
       const defaults = getDefaultSelections(result.columns)
       setSelectedXColumn(defaults.xColumn)
       setSelectedYColumns(defaults.yColumns)
