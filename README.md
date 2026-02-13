@@ -6,6 +6,9 @@ Built as a full-stack application with a React frontend and an Express backend. 
 
 ![CSVPlotterDemo](https://github.com/user-attachments/assets/15a5ad07-a36f-48b9-9928-64a033720525)
 
+**Live Demo:** [csv-plotter-s63y.onrender.com](https://csv-plotter-s63y.onrender.com/)
+Hosted on Render's free tier — the first load may take up to a minute due to cold start (the server spins down after inactivity).
+
 ---
 
 ## Quick Start
