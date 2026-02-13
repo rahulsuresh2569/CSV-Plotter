@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import uploadRouter from './routes/upload.js';
@@ -24,10 +25,14 @@ app.get('/api/health', (req, res) => {
 
 // Serve React build in production
 const clientDist = path.join(__dirname, '..', '..', 'client', 'dist');
-app.use(express.static(clientDist));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(clientDist, 'index.html'));
-});
+const indexHtml = path.join(clientDist, 'index.html');
+
+if (fs.existsSync(indexHtml)) {
+  app.use(express.static(clientDist));
+  app.get('/{*path}', (req, res) => {
+    res.sendFile(indexHtml);
+  });
+}
 
 // Global error handler
 app.use((err, req, res, next) => {
