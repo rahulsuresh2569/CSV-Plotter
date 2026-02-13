@@ -4,7 +4,7 @@ A web application for uploading CSV files and generating interactive 2D charts. 
 
 Built as a full-stack application with a React frontend and an Express backend. The backend handles all CSV parsing so the frontend stays lightweight and focused on visualization.
 
-![CSV Plotter — upload, preview, and chart](docs/screenshot.png)
+![CSVPlotterDemo](https://github.com/user-attachments/assets/15a5ad07-a36f-48b9-9928-64a033720525)
 
 ---
 
@@ -25,6 +25,7 @@ npm run dev
 The app opens at [http://localhost:5173](http://localhost:5173). The backend runs on port 3001 and is proxied through Vite during development.
 
 ### Run Tests
+
 
 ```bash
 cd server
