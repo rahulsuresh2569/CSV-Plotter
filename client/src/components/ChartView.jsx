@@ -1,3 +1,4 @@
+// ChartView.jsx: Renders the chart with range controls, fullscreen, and export
 import { useState, useMemo, useRef } from 'react'
 import {
   Chart as ChartJS,
@@ -14,6 +15,7 @@ import {
 import 'chartjs-adapter-date-fns'
 import { Line, Scatter, Bar } from 'react-chartjs-2'
 import { useTranslation } from '../LanguageContext'
+import { sliceRows, downsampleRows, buildLabels, buildDatasets } from '../utils/chartData'
 import RangeSlider from './RangeSlider'
 import ChartToolbar from './ChartToolbar'
 import styles from './ChartView.module.css'
@@ -31,29 +33,14 @@ ChartJS.register(
   Legend
 )
 
-// Distinct colors for multi-series lines
-const SERIES_COLORS = [
-  { border: '#3b82f6', background: 'rgba(59, 130, 246, 0.5)' },
-  { border: '#ef4444', background: 'rgba(239, 68, 68, 0.5)' },
-  { border: '#10b981', background: 'rgba(16, 185, 129, 0.5)' },
-  { border: '#f59e0b', background: 'rgba(245, 158, 11, 0.5)' },
-  { border: '#8b5cf6', background: 'rgba(139, 92, 246, 0.5)' },
-  { border: '#ec4899', background: 'rgba(236, 72, 153, 0.5)' },
-  { border: '#06b6d4', background: 'rgba(6, 182, 212, 0.5)' },
-  { border: '#84cc16', background: 'rgba(132, 204, 22, 0.5)' },
-]
-
+const MAX_POINTS = 500
 const RANGE_THRESHOLD = 500
 
-function decimateUniform(rows, target) {
-  const n = rows.length
-  if (n <= target) return rows
-  const step = (n - 1) / (target - 1)
-  const result = []
-  for (let i = 0; i < target; i++) {
-    result.push(rows[Math.round(i * step)])
-  }
-  return result
+function getXScaleType(chartType, xType) {
+  if (chartType === 'bar') return 'category'
+  if (xType === 'date') return 'time'
+  if (xType === 'numeric') return 'linear'
+  return 'category'
 }
 
 export default function ChartView({ columns, data, selectedXColumn, selectedYColumns, chartType, onChartTypeChange, darkMode }) {
@@ -67,14 +54,9 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     .map((idx) => columns?.find((c) => c.index === idx))
     .filter(Boolean)
 
-  const xIsNumeric = xColumn?.type === 'numeric'
-  const xIsDate = xColumn?.type === 'date'
+  const xType = xColumn?.type || 'string'
   const isBar = chartType === 'bar'
 
-  // Coerce Y values: non-numeric → null (creates chart gaps via spanGaps: false)
-  const safeY = (val) => (typeof val === 'number' && isFinite(val)) ? val : null
-
-  // --- Row range state (1-indexed, inclusive) ---
   const totalRows = data?.length || 0
   const [rangeFrom, setRangeFrom] = useState(1)
   const [rangeTo, setRangeTo] = useState(1)
@@ -94,7 +76,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   const clampedFrom = Math.max(1, Math.min(rangeFrom, totalRows || 1))
   const clampedTo = Math.max(clampedFrom, Math.min(rangeTo, totalRows || 1))
 
-  // Range panel toggle — auto-expanded for large datasets
+  // Auto-expand range panel for large datasets
   const [rangeOpen, setRangeOpen] = useState(false)
   const prevTotalForToggle = useRef(0)
   if (totalRows > 0 && totalRows !== prevTotalForToggle.current) {
@@ -102,7 +84,8 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setRangeOpen(totalRows >= RANGE_THRESHOLD)
   }
 
-  function commitFrom(val) {
+  // Validate and apply the "from" input value
+  function applyFromValue(val) {
     const n = parseInt(val, 10)
     if (isNaN(n)) {
       setFromInput(String(clampedFrom))
@@ -113,7 +96,8 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setFromInput(String(clamped))
   }
 
-  function commitTo(val) {
+  // Validate and apply the "to" input value
+  function applyToValue(val) {
     const n = parseInt(val, 10)
     if (isNaN(n)) {
       setToInput(String(clampedTo))
@@ -125,13 +109,12 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
   }
 
   function handleFromKeyDown(e) {
-    if (e.key === 'Enter') { e.target.blur(); commitFrom(fromInput) }
+    if (e.key === 'Enter') { e.target.blur(); applyFromValue(fromInput) }
   }
   function handleToKeyDown(e) {
-    if (e.key === 'Enter') { e.target.blur(); commitTo(toInput) }
+    if (e.key === 'Enter') { e.target.blur(); applyToValue(toInput) }
   }
 
-  // Dual-handle slider change handler
   function handleRangeSliderChange(newFrom, newTo) {
     setRangeFrom(newFrom)
     setRangeTo(newTo)
@@ -139,7 +122,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     setToInput(String(newTo))
   }
 
-  // Presets — chunk size adapts to dataset
+  // Pick a chunk size for preset buttons (roughly 12% of total, rounded to a clean number)
   const NICE_NUMBERS = [50, 100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000]
   function niceChunk(total) {
     const raw = Math.round(total * 0.12)
@@ -161,7 +144,6 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
 
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  // --- Fullscreen ---
   function handleFullscreen() {
     const el = containerRef.current
     if (!el) return
@@ -183,7 +165,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     }
   }
 
-  // Theme-aware colors for chart axes and grid
+  // Memoized: reads CSS variables from DOM, only re-runs on theme change
   const themeColors = useMemo(() => {
     const s = getComputedStyle(document.documentElement)
     return {
@@ -194,111 +176,86 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     }
   }, [darkMode])
 
-  // Build Chart.js data — slice to visible range, then decimate
+  // Memoized: building chart arrays is expensive for large datasets (50k+ rows)
   const chartData = useMemo(() => {
     if (!data || yColumnsList.length === 0) return { datasets: [] }
 
-    // Slice to visible range when range panel is active
+    // Step 1: slice to visible range
     const isSubset = rangeOpen && (clampedFrom > 1 || clampedTo < data.length)
-    const visibleData = isSubset ? data.slice(clampedFrom - 1, clampedTo) : data
+    const visibleRows = isSubset ? sliceRows(data, clampedFrom, clampedTo) : data
 
-    const MAX_POINTS = 500
+    // Step 2: downsample for bar/scatter if too many points
     const isScatter = chartType === 'scatter'
-    const needsDecimation = (isBar || isScatter) && visibleData.length > MAX_POINTS
-    const rows = needsDecimation ? decimateUniform(visibleData, MAX_POINTS) : visibleData
+    const needsDecimation = (isBar || isScatter) && visibleRows.length > MAX_POINTS
+    const rows = needsDecimation ? downsampleRows(visibleRows, MAX_POINTS) : visibleRows
 
-    const labels = (isBar || (!xIsNumeric && !xIsDate))
-      ? rows.map((row) => row[selectedXColumn])
-      : undefined
-
-    const datasets = yColumnsList.map((yCol, i) => {
-      const color = SERIES_COLORS[i % SERIES_COLORS.length]
-      const isLargeDataset = rows.length > 1000
-
-      return {
-        label: yCol.name,
-        data: isBar
-          ? rows.map((row) => safeY(row[yCol.index]))
-          : rows.map((row) => ({
-              x: xIsDate ? new Date(row[selectedXColumn]) : row[selectedXColumn],
-              y: safeY(row[yCol.index]),
-            })),
-        borderColor: color.border,
-        backgroundColor: isBar ? color.background : color.background.replace('0.5', '0.1'),
-        borderWidth: isBar ? 1 : isLargeDataset ? 1.5 : 2,
-        pointRadius: chartType === 'scatter' ? (isLargeDataset ? 1.5 : 3) : isLargeDataset ? 0 : 2,
-        pointHoverRadius: 4,
-        tension: 0,
-        spanGaps: false,
-      }
-    })
+    // Step 3: build labels and datasets
+    const labels = buildLabels(rows, selectedXColumn, xType, chartType)
+    const datasets = buildDatasets(rows, selectedXColumn, yColumnsList, chartType, xType)
 
     return { labels, datasets }
-  }, [data, selectedXColumn, yColumnsList, xIsNumeric, xIsDate, chartType, isBar, clampedFrom, clampedTo, rangeOpen])
+  }, [data, selectedXColumn, yColumnsList, xType, chartType, isBar, clampedFrom, clampedTo, rangeOpen])
 
-  const options = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: (data?.length || 0) > 2000 ? false : { duration: 300 },
-    interaction: {
-      mode: isBar ? 'index' : 'nearest',
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        display: yColumnsList.length > 1,
-        position: 'top',
-        labels: {
-          usePointStyle: true,
-          padding: 16,
-          font: { size: 12 },
-          color: themeColors.legend,
-        },
+  // Memoized: prevents Chart.js full re-render when the options object reference changes
+  const options = useMemo(() => {
+    const xScaleType = getXScaleType(chartType, xType)
+
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: (data?.length || 0) > 2000 ? false : { duration: 300 },
+      interaction: {
+        mode: isBar ? 'index' : 'nearest',
+        intersect: false,
       },
-      tooltip: {
-        enabled: true,
-      },
-    },
-    scales: {
-      x: {
-        type: isBar ? 'category' : xIsDate ? 'time' : xIsNumeric ? 'linear' : 'category',
-        ...(xIsDate && !isBar && {
-          time: {
-            tooltipFormat: 'yyyy-MM-dd HH:mm',
+      plugins: {
+        legend: {
+          display: yColumnsList.length > 1,
+          position: 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 16,
+            font: { size: 12 },
+            color: themeColors.legend,
           },
-        }),
-        title: {
-          display: true,
-          text: xColumn?.name || '',
-          font: { size: 13, weight: '600' },
-          color: themeColors.title,
         },
-        ticks: {
-          color: themeColors.tick,
-          font: { size: 11 },
-          maxTicksLimit: 15,
+        tooltip: { enabled: true },
+      },
+      scales: {
+        x: {
+          type: xScaleType,
+          ...(xType === 'date' && !isBar && {
+            time: { tooltipFormat: 'yyyy-MM-dd HH:mm' },
+          }),
+          title: {
+            display: true,
+            text: xColumn?.name || '',
+            font: { size: 13, weight: '600' },
+            color: themeColors.title,
+          },
+          ticks: {
+            color: themeColors.tick,
+            font: { size: 11 },
+            maxTicksLimit: 15,
+          },
+          grid: { color: themeColors.grid },
         },
-        grid: {
-          color: themeColors.grid,
+        y: {
+          title: {
+            display: yColumnsList.length === 1,
+            text: yColumnsList.length === 1 ? yColumnsList[0].name : '',
+            font: { size: 13, weight: '600' },
+            color: themeColors.title,
+          },
+          ticks: {
+            color: themeColors.tick,
+            font: { size: 11 },
+          },
+          grid: { color: themeColors.grid },
         },
       },
-      y: {
-        title: {
-          display: yColumnsList.length === 1,
-          text: yColumnsList.length === 1 ? yColumnsList[0].name : '',
-          font: { size: 13, weight: '600' },
-          color: themeColors.title,
-        },
-        ticks: {
-          color: themeColors.tick,
-          font: { size: 11 },
-        },
-        grid: {
-          color: themeColors.grid,
-        },
-      },
-    },
-  }), [xColumn, yColumnsList, xIsNumeric, xIsDate, isBar, data?.length, themeColors])
+    }
+  }, [xColumn, yColumnsList, xType, isBar, data?.length, themeColors, chartType])
 
   if (!data || selectedXColumn === null) return null
 
@@ -314,7 +271,9 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
     link.click()
   }
 
-  const ChartComponent = chartType === 'bar' ? Bar : chartType === 'scatter' ? Scatter : Line
+  let ChartComponent = Line
+  if (chartType === 'bar') ChartComponent = Bar
+  if (chartType === 'scatter') ChartComponent = Scatter
 
   return (
     <div className={styles.wrapper}>
@@ -351,7 +310,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
                 min={1}
                 max={clampedTo}
                 onChange={(e) => setFromInput(e.target.value)}
-                onBlur={() => commitFrom(fromInput)}
+                onBlur={() => applyFromValue(fromInput)}
                 onKeyDown={handleFromKeyDown}
               />
               <label className={styles.inputLabel}>{t.to}</label>
@@ -362,7 +321,7 @@ export default function ChartView({ columns, data, selectedXColumn, selectedYCol
                 min={clampedFrom}
                 max={totalRows}
                 onChange={(e) => setToInput(e.target.value)}
-                onBlur={() => commitTo(toInput)}
+                onBlur={() => applyToValue(toInput)}
                 onKeyDown={handleToKeyDown}
               />
             </div>
