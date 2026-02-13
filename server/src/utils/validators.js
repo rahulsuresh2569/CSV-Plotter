@@ -1,7 +1,4 @@
-/**
- * File validation helpers.
- * Runs before CSV parsing to catch obvious problems early.
- */
+// validators.js: File validation before CSV parsing
 
 const VALID_MIMETYPES = [
   'text/csv',
@@ -23,7 +20,7 @@ export function validateFile(file) {
     };
   }
 
-  // Check mimetype and extension — accept if either suggests CSV
+  // Accept if mimetype or extension suggests CSV
   const isValidMimetype = VALID_MIMETYPES.includes(file.mimetype);
   const isValidExtension = file.originalname.toLowerCase().endsWith('.csv');
 
@@ -35,7 +32,7 @@ export function validateFile(file) {
     };
   }
 
-  // Check if file looks like text (binary files contain null bytes)
+  // Binary files contain null bytes - reject them
   const sample = file.buffer.slice(0, Math.min(1024, file.buffer.length));
   if (sample.includes(0)) {
     return {
