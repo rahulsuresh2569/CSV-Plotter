@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from 'react'
+// App.jsx: Root component — orchestrates file upload, parsing, column selection, and chart rendering
+import { useState } from 'react'
 import FileUpload from './components/FileUpload'
 import StatusBar from './components/StatusBar'
 import ParsingSettings from './components/ParsingSettings'
@@ -9,6 +10,7 @@ import Toast from './components/Toast'
 import { uploadCSV } from './services/api'
 import { LanguageProvider } from './LanguageContext'
 import translations from './i18n'
+import { getDefaultSelections, mergeColumnsWithOverrides } from './utils/selection'
 import './App.css'
 
 const DEFAULT_SETTINGS = {
@@ -24,40 +26,20 @@ const SAMPLE_FILES = [
 ]
 
 function App() {
-  // The File object — kept in state so we can re-send it when settings change
   const [file, setFile] = useState(null)
   const [isUploading, setIsUploading] = useState(false)
-
-  // Backend response
   const [parseResult, setParseResult] = useState(null)
-
-  // Parsing overrides (auto by default)
   const [parsingSettings, setParsingSettings] = useState(DEFAULT_SETTINGS)
-
-  // Metadata persisted separately — survives parse errors so ParsingSettings stays visible
   const [lastMetadata, setLastMetadata] = useState(null)
-
-  // Error from upload or parse — stores { code, fallback } so translation happens at render time
   const [error, setError] = useState(null)
-
-  // Column selections
   const [selectedXColumn, setSelectedXColumn] = useState(null)
   const [selectedYColumns, setSelectedYColumns] = useState([])
-
-  // Custom column name overrides: { [columnIndex]: "custom name" }
   const [columnNames, setColumnNames] = useState({})
-
-  // Column type overrides (Set of column indices forced to numeric)
   const [overriddenColumns, setOverriddenColumns] = useState(() => new Set())
-
-  // Chart type: 'line' | 'scatter' | 'bar'
   const [chartType, setChartType] = useState('line')
-
-  // Toast notification
   const [toast, setToast] = useState(null)
 
-  // Dark mode — set data-theme synchronously so CSS variables are available
-  // during the same render cycle (before child useMemo hooks read them)
+  // Dark mode — sync data-theme attribute so CSS variables apply immediately
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('csv-plotter-theme') === 'dark'
     document.documentElement.setAttribute('data-theme', saved ? 'dark' : 'light')
@@ -73,7 +55,6 @@ function App() {
     })
   }
 
-  // Language — persisted in localStorage
   const [language, setLanguage] = useState(() => {
     return localStorage.getItem('csv-plotter-lang') || 'en'
   })
@@ -88,35 +69,23 @@ function App() {
 
   const t = translations[language] || translations.en
 
-  /**
-   * Merge custom column names into the parsed columns array.
-   * Children receive this merged array and always read col.name.
-   */
-  const columns = useMemo(() => {
-    if (!parseResult?.columns) return []
-    return parseResult.columns.map((col) => {
-      const name = columnNames[col.index] ?? col.name
-      if (overriddenColumns.has(col.index) && col.type !== 'numeric') {
-        return { ...col, name, type: 'numeric', originalType: col.type }
-      }
-      return { ...col, name }
-    })
-  }, [parseResult?.columns, columnNames, overriddenColumns])
+  // Merge custom names and type overrides into columns on every render (cheap for 5-20 cols)
+  const columns = mergeColumnsWithOverrides(
+    parseResult?.columns || [],
+    columnNames,
+    overriddenColumns
+  )
 
-  /**
-   * Upload a file to the backend with the given settings.
-   * Called on initial file select and when Apply is clicked in ParsingSettings.
-   */
-  const doUpload = useCallback(async (fileToUpload, settings) => {
+  async function doUpload(fileToUpload, settings) {
     setIsUploading(true)
     setError(null)
 
     try {
       const result = await uploadCSV(fileToUpload, settings)
 
-      // Promote "no numeric columns" from warning to error — chart cannot be plotted
-      var noNumericIdx = -1
-      for (var i = 0; i < (result.warnings || []).length; i++) {
+      // Promote "no numeric columns" from warning to error — chart cannot render
+      let noNumericIdx = -1
+      for (let i = 0; i < (result.warnings || []).length; i++) {
         if (result.warnings[i] && result.warnings[i].key === 'warningNoNumericColumns') {
           noNumericIdx = i
           break
@@ -130,33 +99,20 @@ function App() {
       setParseResult(result)
       setLastMetadata(result.metadata)
 
-      // Show success toast
       const rowLabel = `${result.rowCount?.toLocaleString()} ${t.rows}`
       setToast(`${t.parseSuccess} \u2014 ${rowLabel}`)
 
-      // Auto-select first column as X, auto-select first few numeric Y columns
-      if (result.columns.length > 0) {
-        setSelectedXColumn(result.columns[0].index)
-        const MAX_AUTO_Y = 4
-        const numericY = result.columns
-          .filter((c) => c.index !== result.columns[0].index && c.type === 'numeric')
-          .slice(0, MAX_AUTO_Y)
-          .map((c) => c.index)
-        setSelectedYColumns(numericY)
-      } else {
-        setSelectedYColumns([])
-      }
+      // Auto-select default X and Y columns
+      const defaults = getDefaultSelections(result.columns)
+      setSelectedXColumn(defaults.xColumn)
+      setSelectedYColumns(defaults.yColumns)
       setColumnNames({})
       setOverriddenColumns(new Set())
     } catch (err) {
-      // axios wraps the response in err.response
       const data = err.response?.data
-
-      // Store code + fallback — translation happens at render time so language switches apply
       const errorCode = data?.code || null
       const fallback = data?.error || err.message || 'An unexpected error occurred.'
 
-      // Persist metadata from error response if available
       if (data?.metadata) {
         setLastMetadata(data.metadata)
       }
@@ -170,23 +126,14 @@ function App() {
     } finally {
       setIsUploading(false)
     }
-  }, [t])
+  }
 
-  /**
-   * Called when the user selects a file via drag-and-drop or file input.
-   * Resets settings to auto and uploads.
-   */
   function handleFileSelect(selectedFile) {
     setFile(selectedFile)
     setParsingSettings(DEFAULT_SETTINGS)
     doUpload(selectedFile, DEFAULT_SETTINGS)
   }
 
-  /**
-   * Called when the user clicks a sample file button.
-   * Fetches the CSV from public/, wraps it in a File object,
-   * and feeds it through the normal upload flow.
-   */
   async function handleSampleSelect(sample) {
     const res = await fetch(sample.path)
     const text = await res.text()
@@ -195,10 +142,6 @@ function App() {
     handleFileSelect(sampleFile)
   }
 
-  /**
-   * Called when Apply is clicked in ParsingSettings.
-   * Commits the new settings and re-uploads the same file.
-   */
   function handleSettingsApply(newSettings) {
     setParsingSettings(newSettings)
     if (file) {
@@ -215,7 +158,6 @@ function App() {
     setSelectedYColumns((prev) =>
       prev.includes(colIndex) ? prev : [...prev, colIndex]
     )
-    // Clear "no numeric columns" error when user forces a column to numeric
     if (error && error.code === 'NO_NUMERIC_COLUMNS') {
       setError(null)
     }
@@ -230,13 +172,8 @@ function App() {
     setSelectedYColumns((prev) => prev.filter((idx) => idx !== colIndex))
   }
 
-  // Show ParsingSettings when we have metadata (from success or from error)
   const showParsingSettings = !!lastMetadata && !!file
-
-  // Whether headers were auto-generated (no header row detected)
   const headersAutoGenerated = parseResult && lastMetadata && !lastMetadata.hasHeader
-
-  // Whether any columns can be plotted on the Y-axis
   const hasPlottableColumns = columns.some((col) => col.type === 'numeric')
 
   return (
