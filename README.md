@@ -199,17 +199,25 @@ The parser makes deliberate assumptions about how to handle ambiguous or messy C
 CSV-Plotter/
 ├── client/                         # React frontend (Vite)
 │   ├── src/
-│   │   ├── App.jsx                 # Root component, state management
+│   │   ├── App.jsx                 # Root component — state, upload flow, layout
 │   │   ├── components/
+│   │   │   ├── AppHeader.jsx       # Title, GitHub link, language/theme toggles
 │   │   │   ├── FileUpload.jsx      # Drag-and-drop file upload
-│   │   │   ├── StatusBar.jsx       # Metadata, errors, warnings display
+│   │   │   ├── SampleFilesRow.jsx  # Sample CSV file buttons
+│   │   │   ├── StatusBar.jsx       # Metadata, errors, warnings, column overrides
 │   │   │   ├── ParsingSettings.jsx # Delimiter/decimal/header overrides
 │   │   │   ├── DataPreview.jsx     # Scrollable data table with editable headers
 │   │   │   ├── ColumnSelector.jsx  # X/Y axis selection sidebar
 │   │   │   ├── ChartView.jsx       # Chart rendering, range filtering, fullscreen
 │   │   │   ├── ChartToolbar.jsx    # Chart type buttons, export, fullscreen toggle
 │   │   │   ├── RangeSlider.jsx     # Dual-handle range slider
-│   │   │   └── Toast.jsx           # Auto-dismissing notification
+│   │   │   ├── Toast.jsx           # Auto-dismissing notification
+│   │   │   ├── EmptyState.jsx      # Placeholder shown when no file is loaded
+│   │   │   └── SkeletonLoader.jsx  # Loading skeleton during first upload
+│   │   ├── utils/
+│   │   │   ├── selection.js        # Column auto-selection and override merging
+│   │   │   ├── chartData.js        # Row slicing, downsampling, Chart.js dataset building
+│   │   │   └── uploadHelpers.js    # Warning-to-error promotion logic
 │   │   ├── services/api.js         # Axios wrapper for upload endpoint
 │   │   ├── i18n.js                 # EN/DE translation strings
 │   │   └── LanguageContext.jsx     # React Context for language
@@ -313,7 +321,7 @@ A column is classified as numeric if at least 90% of its non-null values are num
 <details>
 <summary><strong>State management without external libraries</strong></summary>
 
-All application state lives in React `useState` hooks within `App.jsx`. For the current feature set (~15 state variables), this is simpler and more transparent than introducing Redux or Zustand. If the app grew to support multiple files, sessions, or collaborative features, extracting state into `useReducer` or an external store would be the natural next step.
+All application state lives in React `useState` hooks within `App.jsx`, grouped into five labeled sections: upload/response, parsing settings, column selections, UI preferences, and feedback. The upload flow is split into `doUpload`, `applySuccessState`, and `applyErrorState` so each path is easy to follow. Data transforms live in utility files (`selection.js`, `chartData.js`, `uploadHelpers.js`), and layout-only markup is extracted into small components (`AppHeader`, `EmptyState`, etc.). For the current scale (~14 state variables, single-page app), this is simpler and more transparent than introducing Redux or Zustand. If the app grew to support multiple files or sessions, extracting state into custom hooks or an external store would be the natural next step.
 
 </details>
 
